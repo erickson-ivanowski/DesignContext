@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "paths": {
+      "@designcontext/shared": ["packages/shared/src/index.ts"],
+      "@designcontext/core": ["packages/core/src/index.ts"],
+      "@designcontext/figma-adapter": ["packages/figma-adapter/src/index.ts"],
+      "@designcontext/cache": ["packages/cache/src/index.ts"],
+      "@designcontext/design-graph": ["packages/design-graph/src/index.ts"],
+      "@designcontext/design-ir": ["packages/design-ir/src/index.ts"],
+      "@designcontext/diff-engine": ["packages/diff-engine/src/index.ts"],
+      "@designcontext/context-engine": ["packages/context-engine/src/index.ts"],
+      "@designcontext/mcp-server": ["packages/mcp-server/src/index.ts"],
+      "@designcontext/cli": ["packages/cli/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts"
+  ]
+}

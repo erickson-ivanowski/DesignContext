@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+*.tgz
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / secrets
+.env
+.env.*
+credentials/
+
+# Local designcontext data (sensitive)
+database.sqlite
+database.sqlite-journal
+database.sqlite-wal
+database.sqlite-shm
+cache/
+screenshots/
+.designcontext/
+~/.designcontext/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp

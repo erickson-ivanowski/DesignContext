@@ -1,0 +1,48 @@
+{
+  "name": "designcontext",
+  "version": "0.1.0",
+  "description": "Local-first context compiler that sits between AI coding agents and the Figma MCP.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "designcontext": "dist/cli.mjs"
+  },
+  "main": "dist/cli.mjs",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "mcp": "tsx packages/cli/src/cli.ts mcp",
+    "cli": "tsx packages/cli/src/cli.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "commander": "^12.1.0",
+    "pino": "^9.3.2",
+    "zod": "^3.23.8"
+  },
+  "optionalDependencies": {
+    "keytar": "^7.9.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.23.0",
+    "eslint": "^9.9.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.5"
+  }
+}

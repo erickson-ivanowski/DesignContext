@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DesignContext — Documentação</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #171a23;
+    --panel-2: #1e2230;
+    --border: #2a2f3f;
+    --text: #e6e8ef;
+    --muted: #9aa3b5;
+    --accent: #6c8cff;
+    --accent-2: #a06cff;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --code-bg: #0b0d13;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header.hero {
+    padding: 72px 24px 56px;
+    text-align: center;
+    background:
+      radial-gradient(1000px 400px at 20% -10%, rgba(108,140,255,.25), transparent 60%),
+      radial-gradient(800px 360px at 80% -10%, rgba(160,108,255,.22), transparent 60%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero .logo {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .hero .logo .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+  .hero h1 {
+    font-size: clamp(34px, 6vw, 56px); margin: 18px 0 12px; letter-spacing: -.02em; font-weight: 800;
+  }
+  .hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.tagline { max-width: 640px; margin: 0 auto; color: var(--muted); font-size: 18px; }
+
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(15,17,23,.86); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .inner {
+    max-width: 980px; margin: 0 auto; padding: 12px 24px;
+    display: flex; gap: 22px; flex-wrap: wrap; justify-content: center;
+  }
+  nav a { color: var(--muted); font-size: 14px; }
+  nav a:hover { color: var(--text); text-decoration: none; }
+
+  main { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+  section { margin-bottom: 56px; }
+  h2 {
+    font-size: 26px; letter-spacing: -.01em; margin: 0 0 18px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  h2 .num { color: var(--accent); font-weight: 800; margin-right: 8px; }
+  h3 { font-size: 18px; margin: 22px 0 8px; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 22px; margin: 16px 0;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 2px 6px; font-size: 13.5px; color: #c9d4ff;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; font-size: 13.5px; line-height: 1.5;
+  }
+  pre code { background: none; border: none; padding: 0; color: #dbe1f0; }
+  .prompt { color: var(--ok); user-select: none; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  td code { white-space: nowrap; }
+
+  .step { display: flex; gap: 14px; margin: 14px 0; }
+  .step .n {
+    flex: 0 0 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff;
+  }
+  .step .body { flex: 1; }
+
+  .callout {
+    border-left: 3px solid var(--warn); background: rgba(251,191,36,.07);
+    padding: 14px 16px; border-radius: 8px; margin: 16px 0; font-size: 14.5px;
+  }
+  .callout.ok { border-color: var(--ok); background: rgba(74,222,128,.06); }
+  .callout b { display: block; margin-bottom: 2px; }
+
+  footer {
+    border-top: 1px solid var(--border); padding: 32px 24px; text-align: center; color: var(--muted); font-size: 13.5px;
+  }
+  @media (max-width: 640px) { pre { font-size: 12.5px; } td code { white-space: normal; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="logo"><span class="dot"></span> designcontext</div>
+  <h1>Do design ao código, <span>sem bagunça</span></h1>
+  <p class="tagline">
+    O DesignContext organiza o seu design e entrega ao agente de IA
+    exatamente o contexto que ele precisa para implementar — nada de despejar o arquivo inteiro.
+  </p>
+</header>
+
+<nav>
+  <div class="inner">
+    <a href="#o-que-e">O que é</a>
+    <a href="#requisitos">Requisitos</a>
+    <a href="#instalacao">Instalação</a>
+    <a href="#primeiros-passos">Primeiros passos</a>
+    <a href="#comandos">Comandos</a>
+    <a href="#agente">Integração com o agente</a>
+    <a href="#faq">FAQ</a>
+  </div>
+</nav>
+
+<main>
+
+  <section id="o-que-e">
+    <h2><span class="num">1.</span>O que é o DesignContext</h2>
+    <p>
+      O DesignContext é uma ponte entre o seu design no <strong>Figma</strong> e o agente de IA que
+      escreve código. Em vez de jogar o design bruto para a IA (que gasta muito e se perde), ele:
+    </p>
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">🔍 Indexa o que importa</h3>
+        <p>Lê a estrutura do seu Figma e guarda uma versão organizada e leve do design localmente, na sua máquina.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🧠 Responde só o necessário</h3>
+        <p>Quando a IA pergunta sobre uma tela, componente ou mudança, devolve apenas o pedaço relevante — economizando até 70% de contexto.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🔁 Detecta mudanças</h3>
+        <p>Se você alterou só um botão, ele percebe isso e avisa a IA do que mudou — sem reprocessar o design inteiro.</p>
+      </div>
+    </div>
+    <div class="callout ok">
+      <b>Privado e local</b>
+      Tudo fica salvo na sua máquina, em <code>~/.designcontext/</code>. Nada é enviado para servidores externos — só há comunicação com o Figma.
+    </div>
+  </section>
+
+  <section id="requisitos">
+    <h2><span class="num">2.</span>Requisitos</h2>
+    <ul>
+      <li><strong>Node.js 22.5</strong> ou superior (<a href="https://nodejs.org" target="_blank" rel="noreferrer">baixar aqui</a>).</li>
+      <li>Uma <strong>conexão com o Figma</strong> — normalmente o Figma MCP que você já usa no seu agente (detectado automaticamente). Token só em último caso.</li>
+      <li>Um terminal (Terminal no Mac, PowerShell no Windows).</li>
+    </ul>
+    <p>
+      Na primeira execução do <code>scan</code>, o DesignContext baixa automaticamente o
+      servidor oficial do Figma MCP (<code>figma-developer-mcp</code>) — por isso a primeira
+      varredura precisa de internet.
+    </p>
+    <p>Para conferir se você já tem o Node instalado:</p>
+    <pre><code><span class="prompt">$</span> node --version</code></pre>
+  </section>
+
+  <section id="instalacao">
+    <h2><span class="num">3.</span>Instalação</h2>
+    <p>Instale de forma global (uma única vez):</p>
+    <pre><code><span class="prompt">$</span> npm install -g designcontext</code></pre>
+    <p>Ou, se você recebeu um arquivo <code>.tgz</code> do time:</p>
+    <pre><code><span class="prompt">$</span> npm install -g ./designcontext-0.1.0.tgz</code></pre>
+    <p>Confirme que funcionou:</p>
+    <pre><code><span class="prompt">$</span> designcontext --version</code></pre>
+  </section>
+
+  <section id="primeiros-passos">
+    <h2><span class="num">4.</span>Primeiros passos</h2>
+
+    <div class="step">
+      <div class="n">1</div>
+      <div class="body">
+        <h3 style="margin-top:0">Inicialize o projeto</h3>
+        <p>Dentro da pasta do seu projeto, rode:</p>
+        <pre><code><span class="prompt">$</span> cd minha-pasta
+<span class="prompt">$</span> designcontext init</code></pre>
+        <p>Isso cria uma pasta <code>.designcontext/</code> com a configuração do projeto.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">2</div>
+      <div class="body">
+        <h3 style="margin-top:0">Conecte o Figma</h3>
+        <p>O DesignContext reaproveita o Figma MCP que você já usa no seu agente — normalmente nenhum token é necessário:</p>
+        <pre><code><span class="prompt">$</span> designcontext connect</code></pre>
+        <p>Se preferir, dá para apontar para um Figma MCP hospedado ou usar um token:</p>
+        <pre><code><span class="prompt">$</span> designcontext connect --url https://seu-host/mcp
+<span class="prompt">$</span> designcontext connect --file &lt;idDoArquivo&gt; --token &lt;seuToken&gt;</code></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">3</div>
+      <div class="body">
+        <h3 style="margin-top:0">Indexe uma tela (scan)</h3>
+        <p>Escaneie o arquivo inteiro ou só uma tela específica:</p>
+        <pre><code><span class="prompt">$</span> designcontext scan                      # documento inteiro
+<span class="prompt">$</span> designcontext scan --node 123:456        # só uma tela/componente</code></pre>
+        <p>
+          Aqui o DesignContext abre o Figma MCP, lê o design e guarda a versão organizada
+          localmente. Na primeira vez ele faz um scan completo; nas próximas, já detecta só o que mudou.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">4</div>
+      <div class="body">
+        <h3 style="margin-top:0">Pronto — o agente já consegue usar</h3>
+        <p>Com o servidor MCP no ar, a IA passa a consultar o design sozinha. Veja a <a href="#agente">seção de integração</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="comandos">
+    <h2><span class="num">5.</span>Referência de comandos</h2>
+    <table>
+      <thead>
+        <tr><th>Comando</th><th>O que faz</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>init [nome]</code></td><td>Cria a pasta <code>.designcontext/</code> com a configuração do projeto.</td></tr>
+        <tr><td><code>connect</code></td><td>Configura a conexão com o Figma e guarda as credenciais no cofre do sistema.</td></tr>
+        <tr><td><code>scan</code></td><td>Indexa o escopo do projeto. Aceita <code>--node &lt;id&gt;</code> e <code>--incremental</code>.</td></tr>
+        <tr><td><code>status</code></td><td>Mostra telas, componentes e tokens indexados, além do tamanho do cache.</td></tr>
+        <tr><td><code>diff [tela]</code></td><td>Mostra só o que mudou desde o último scan.</td></tr>
+        <tr><td><code>inspect</code></td><td>Imprime o contexto de um nó em um nível (0 = resumo … 4 = bruto).</td></tr>
+        <tr><td><code>clear-cache</code></td><td>Limpa o cache local (mantém a configuração do projeto).</td></tr>
+        <tr><td><code>mcp</code></td><td>Inicia o servidor MCP para o agente de IA.</td></tr>
+      </tbody>
+    </table>
+    <p>Para ver todas as opções de qualquer comando:</p>
+    <pre><code><span class="prompt">$</span> designcontext &lt;comando&gt; --help</code></pre>
+  </section>
+
+  <section id="agente">
+    <h2><span class="num">6.</span>Integração com o agente de IA</h2>
+    <p>
+      O DesignContext funciona como um <strong>servidor MCP</strong>. Basta registrar o comando
+      abaixo na configuração do seu agente (Claude, Codex, etc.):
+    </p>
+    <pre><code>{
+  "mcpServers": {
+    "design-context": {
+      "command": "designcontext",
+      "args": ["mcp"]
+    }
+  }
+}</code></pre>
+    <p>Com isso, o agente ganha ferramentas para consultar o design sem que você precise copiar e colar nada:</p>
+    <table>
+      <thead><tr><th>Ferramenta</th><th>O que entrega</th></tr></thead>
+      <tbody>
+        <tr><td><code>design_get_screen</code></td><td>Resumo de uma tela (seções, componentes, layout, filhos disponíveis).</td></tr>
+        <tr><td><code>design_get_structure</code></td><td>A árvore de um nó até a profundidade pedida.</td></tr>
+        <tr><td><code>design_get_component</code></td><td>Detalhe completo de um componente (estrutura, propriedades, tokens, mapeamento de código).</td></tr>
+        <tr><td><code>design_get_tokens</code></td><td>Tokens de estilo (cores, espaçamentos, tipografia) de um escopo.</td></tr>
+        <tr><td><code>design_get_changes</code></td><td>Só o que mudou desde a última versão.</td></tr>
+        <tr><td><code>design_find</code></td><td>Busca por nome de tela ou componente.</td></tr>
+        <tr><td><code>design_inspect</code></td><td>Aprofunda o contexto de um nó, nível a nível.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <b>Como isso aparece no dia a dia</b>
+      Você pede: <em>"implemente a tela Checkout do Figma"</em>. O agente chama <code>design_get_screen</code>,
+      recebe só o resumo da tela e os componentes envolvidos — e implementa com o contexto certo.
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2><span class="num">7.</span>Perguntas frequentes</h2>
+
+    <h3>Preciso entender de banco de dados ou de código?</h3>
+    <p>Não. Você só precisa dos comandos <code>init</code>, <code>connect</code> e <code>scan</code>. O resto é automático.</p>
+
+    <h3>Meus dados vão para algum servidor?</h3>
+    <p>Não. Tudo fica local, em <code>~/.designcontext/</code>. A única comunicação externa é com o Figma, para ler o design.</p>
+
+    <h3>O que acontece se eu mudar uma tela no Figma?</h3>
+    <p>Rode <code>designcontext scan</code> de novo. Ele detecta só o que mudou e a IA fica sabendo exatamente o que foi alterado.</p>
+
+    <h3>O que é "scan incremental"?</h3>
+    <p>É o scan rápido: em vez de reprocessar tudo, ele compara e só atualiza os nós que mudaram. É o comportamento padrão após o primeiro scan.</p>
+
+    <h3>O que preciso para conectar ao Figma?</h3>
+    <p>
+      Na maioria dos casos, nada além de rodar <code>designcontext connect</code>: ele detecta o
+      Figma MCP que você já tem configurado no seu agente e reaproveita. Se não houver, dá para
+      apontar para um Figma MCP hospedado (<code>--url</code>) ou usar um token do Figma.
+    </p>
+
+    <h3>Onde ficam as credenciais do Figma?</h3>
+    <p>No cofre seguro do sistema operacional (Keychain no macOS, Credential Manager no Windows). Nunca em arquivos do projeto.</p>
+  </section>
+
+</main>
+
+<footer>
+  DesignContext &middot; documentação do usuário final &middot; versão 0.1.0
+</footer>
+
+</body>
+</html>
