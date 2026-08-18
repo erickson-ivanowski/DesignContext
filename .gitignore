@@ -23,7 +23,7 @@ database.sqlite
 database.sqlite-journal
 database.sqlite-wal
 database.sqlite-shm
-cache/
+/cache/
 screenshots/
 .designcontext/
 ~/.designcontext/
