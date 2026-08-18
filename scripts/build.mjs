@@ -36,6 +36,7 @@ await esbuild.build({
     "commander",
     "pino",
     "zod",
+    "smol-toml",
     "@modelcontextprotocol/*",
     "keytar",
     "node:*",

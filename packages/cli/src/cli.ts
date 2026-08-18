@@ -13,6 +13,7 @@ import { status } from "./status";
 import { diff } from "./diff";
 import { inspect } from "./inspect";
 import { clearCache } from "./clear-cache";
+import { setup } from "./setup";
 
 const program = new Command();
 
@@ -105,8 +106,16 @@ program
   });
 
 program
-  .command("mcp")
-  .description("Start the MCP server over stdio")
+  .command("setup")
+  .option("--agent <ids>", "comma-separated agent ids (skip the interactive prompt)")
+  .description("Register the DesignContext MCP server with an AI agent (Claude, Gemini, Codex, opencode, ...)")
+  .action(async (opts: { agent?: string }) => {
+    await setup({ agent: opts.agent });
+  });
+
+program
+  .command("mcp", { hidden: true })
+  .description("Start the MCP server over stdio (invoked by agents, not run directly)")
   .action(async () => {
     const ctx = await createAppContext(resolveFileOptions());
     await startServer({
