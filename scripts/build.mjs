@@ -1,8 +1,10 @@
 import esbuild from "esbuild";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf-8"));
 const packages = [
   "shared",
   "core",
@@ -31,6 +33,7 @@ await esbuild.build({
   target: "node22",
   outfile: path.join(root, "dist", "cli.mjs"),
   banner: { js: "#!/usr/bin/env node" },
+  define: { __DESIGNCONTEXT_VERSION__: JSON.stringify(pkg.version) },
   alias,
   external: [
     "commander",

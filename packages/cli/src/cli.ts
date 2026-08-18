@@ -15,12 +15,17 @@ import { inspect } from "./inspect";
 import { clearCache } from "./clear-cache";
 import { setup } from "./setup";
 
+declare const __DESIGNCONTEXT_VERSION__: string | undefined;
+// esbuild replaces __DESIGNCONTEXT_VERSION__ with package.json's version at build time
+// (see scripts/build.mjs); it's undefined when run directly via tsx in dev.
+const VERSION = typeof __DESIGNCONTEXT_VERSION__ !== "undefined" ? __DESIGNCONTEXT_VERSION__ : "0.0.0-dev";
+
 const program = new Command();
 
 program
   .name("designcontext")
   .description("Local-first context compiler between AI agents and the Figma MCP")
-  .version("0.1.0");
+  .version(VERSION);
 
 program
   .command("init")
