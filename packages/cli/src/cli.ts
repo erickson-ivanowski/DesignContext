@@ -248,12 +248,14 @@ program
           const nodes = await ctx.graph.all(file.fileId);
           const hasConnection =
             hasStaticConnection(config, file.fileId) || Boolean(await getSecret("figma-token"));
+          const importOnly = config.figmaFiles.find((f) => f.fileId === file.fileId)?.importOnly;
           result.push({
             alias: file.alias,
             fileId: file.fileId,
             screens: nodes.filter((n) => ["SCREEN", "FRAME", "CANVAS"].includes(n.type)).length,
             components: nodes.filter((n) => n.componentId != null).length,
             hasConnection,
+            importOnly,
           });
         }
         return result;
@@ -262,7 +264,8 @@ program
         const hasConnection =
           hasStaticConnection(config, fileId) || Boolean(await getSecret("figma-token"));
         const indexedNodes = (await ctx.graph.all(fileId)).length;
-        return { hasConnection, indexedNodes };
+        const importOnly = config.figmaFiles.find((f) => f.fileId === fileId)?.importOnly;
+        return { hasConnection, indexedNodes, importOnly };
       },
       resolveFileId: async (aliasOrId) => {
         if (aliasOrId) {

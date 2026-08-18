@@ -3,7 +3,7 @@ import { createToolDefinitions, type ToolContext, type FileConnectionState } fro
 import { InMemoryDesignGraph } from "@designcontext/design-graph";
 import { ContextEngineImpl } from "@designcontext/context-engine";
 
-function buildCtx(connectionState: FileConnectionState): ToolContext {
+function buildCtx(connectionState: FileConnectionState, withImport = false): ToolContext {
   const graph = new InMemoryDesignGraph();
   const engine = new ContextEngineImpl(graph, {
     get: async () => null,
@@ -33,6 +33,9 @@ function buildCtx(connectionState: FileConnectionState): ToolContext {
     ],
     resolveFileId: async () => "file-1",
     getFileConnectionState: async () => connectionState,
+    ...(withImport
+      ? { importFigmaData: async () => ({ discovered: 0, indexed: 0, changed: 0, cached: 0 }) }
+      : {}),
   };
 }
 
@@ -73,5 +76,25 @@ describe("assertFileReady: actionable errors for empty files", () => {
 
     const result = await tool.handler({ query: "Checkout" });
     expect(result).toEqual([]);
+  });
+
+  it("points the agent at design_import (not a token) when the file is import-only and has no data", async () => {
+    const ctx = buildCtx({ hasConnection: false, indexedNodes: 0, importOnly: true }, true);
+    const tool = findTool(ctx, "design_get_screen");
+
+    await expect(tool.handler({ screen: "Checkout", file: "checkout" })).rejects.toThrow(/design_import/);
+    await expect(tool.handler({ screen: "Checkout", file: "checkout" })).rejects.not.toThrow(
+      /Personal Access Tokens/,
+    );
+  });
+
+  it("mentions design_import as an alternative even for a non-import-only file, when the capability exists", async () => {
+    const ctx = buildCtx({ hasConnection: false, indexedNodes: 0 }, true);
+    const tool = findTool(ctx, "design_get_screen");
+
+    await expect(tool.handler({ screen: "Checkout", file: "checkout" })).rejects.toThrow(/design_import/);
+    await expect(tool.handler({ screen: "Checkout", file: "checkout" })).rejects.toThrow(
+      /Personal Access Tokens/,
+    );
   });
 });

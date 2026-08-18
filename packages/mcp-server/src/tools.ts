@@ -26,6 +26,7 @@ export const listFilesOutput = z.array(
     screens: z.number(),
     components: z.number(),
     hasConnection: z.boolean(),
+    importOnly: z.boolean().optional(),
   }),
 );
 
@@ -156,6 +157,7 @@ export interface FileSummary {
   screens: number;
   components: number;
   hasConnection: boolean;
+  importOnly?: boolean;
 }
 
 export interface FileConnectionState {
@@ -163,6 +165,8 @@ export interface FileConnectionState {
   hasConnection: boolean;
   /** Nodes currently indexed for this file, across all scopes. */
   indexedNodes: number;
+  /** This file was registered with `connect --import-only` — it has no connection of its own by design. */
+  importOnly?: boolean;
 }
 
 export interface ToolContext {
@@ -194,11 +198,25 @@ async function assertFileReady(ctx: ToolContext, fileId: string, aliasOrId: stri
   const state = await ctx.getFileConnectionState(fileId);
   if (state.indexedNodes > 0) return;
 
+  if (state.importOnly && ctx.importFigmaData) {
+    throw new Error(
+      `"${aliasOrId}" has no data yet — it was registered as import-only (no Figma connection of ` +
+        "its own). Fetch this node's design data with your own Figma MCP tool, then call design_import " +
+        `with {file: "${aliasOrId}", scopeNodeId: <the node you fetched>, rawData: <that tool's raw output>} ` +
+        "to index it.",
+    );
+  }
+
   if (!state.hasConnection) {
     throw new Error(
       `No Figma connection is configured for "${aliasOrId}" and it has never been scanned. ` +
         "Ask the user to generate a token at https://figma.com/settings → Personal Access Tokens, then run: " +
-        `designcontext connect --file <url> --token <token>, then designcontext scan --file ${aliasOrId}`,
+        `designcontext connect --file <url> --token <token>, then designcontext scan --file ${aliasOrId}. ` +
+        (ctx.importFigmaData
+          ? "Alternatively, if you already have your own Figma MCP access, fetch this node's data yourself " +
+            `and call design_import instead — no token needed (run designcontext connect --file <url> ` +
+            "--import-only first to register the file that way)."
+          : ""),
     );
   }
   throw new Error(
@@ -225,7 +243,11 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
     },
     {
       name: "design_list_files",
-      description: "List the Figma files this project tracks — call this first when unsure which `file` to pass to other tools.",
+      description:
+        "List the Figma files this project tracks — call this first when unsure which `file` to pass to " +
+        "other tools. A result with `importOnly: true` and few/no screens means that file has no Figma " +
+        "connection of its own; index it by fetching its data with your own Figma MCP tool and calling " +
+        "design_import (when available).",
       inputSchema: listFilesInput,
       outputSchema: listFilesOutput,
       handler: async () => ctx.listFiles(),
@@ -350,9 +372,14 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
     tools.push({
       name: "design_import",
       description:
-        "Call this when design_get_screen/etc. report a file has no connection configured and the user " +
-        "doesn't want to generate a Figma token. Fetch the node's raw design data via your own Figma MCP " +
-        "tool (e.g. get_figma_data), then pass its exact raw text output here to index it.",
+        "Indexes a Figma node using YOUR OWN Figma MCP access instead of a connection this project holds — " +
+        "no Figma token required. Use this whenever the user wants a Figma file/screen imported, indexed, or " +
+        "synced and either (a) design_get_screen/etc. reported the file has no connection configured, or " +
+        "(b) you already know (from design_list_files or the user) that the file was connected with " +
+        "`designcontext connect --import-only`. To use it: call your own Figma MCP's raw-data tool (e.g. " +
+        "get_figma_data) for the node the user cares about, then pass that tool's exact raw text output here " +
+        "as rawData, together with scopeNodeId (the node you fetched) and file (the alias or id). Do not " +
+        "summarize or reformat rawData — pass it through verbatim.",
       inputSchema: importInput,
       outputSchema: importOutput,
       handler: async (input) => {
