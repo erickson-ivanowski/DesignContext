@@ -81,7 +81,8 @@ function resolveElement(
 }
 
 /** Parse a single `key=value` attribute from a NODES line's trailing attribute list. Value is
- * JSON when it looks like one (`{...}`/`[...]`), otherwise a bare comma-list or plain string. */
+ * JSON when it looks like one (`{...}`/`[...]`), a quoted string (may contain spaces) when
+ * wrapped in `"..."`, otherwise a bare comma-list or plain string. */
 function parseAttrValue(raw: string): unknown {
   const trimmed = raw.trim();
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
@@ -91,13 +92,18 @@ function parseAttrValue(raw: string): unknown {
       return trimmed;
     }
   }
+  if (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) {
+    return trimmed.slice(1, -1).replace(/\\"/g, '"');
+  }
   if (trimmed.includes(",")) {
     return trimmed.split(",").map((s) => s.trim());
   }
   return trimmed;
 }
 
-/** Split a NODES attribute tail into `key=value` pairs, respecting `{...}`/`[...]` spans that may contain spaces. */
+/** Split a NODES attribute tail into `key=value` pairs, respecting `{...}`/`[...]` spans and
+ * `"..."` quoted strings (both may contain spaces) so multi-word values like a TEXT node's
+ * `text="Some sentence with spaces"` aren't cut off at the first space. */
 function splitAttrs(tail: string): Array<[string, string]> {
   const pairs: Array<[string, string]> = [];
   let i = 0;
@@ -125,6 +131,10 @@ function splitAttrs(tail: string): Array<[string, string]> {
           }
         }
       }
+    } else if (tail[j] === '"') {
+      j++;
+      while (j < tail.length && !(tail[j] === '"' && tail[j - 1] !== "\\")) j++;
+      j++; // consume the closing quote
     } else {
       const next = tail.indexOf(" ", j);
       j = next === -1 ? tail.length : next;

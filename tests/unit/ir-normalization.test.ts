@@ -41,4 +41,18 @@ describe("IR normalization", () => {
     });
     expect(tokens.color).toEqual({ r: "1", g: "0.5", b: "0", a: "1" });
   });
+
+  it("preserves a TEXT node's `text` content in properties (regression: this was silently dropped)", () => {
+    const ir = normalize(
+      "1:21",
+      {
+        name: "Edit team color styles",
+        type: "TEXT",
+        text: "Edit team color styles",
+      },
+      "file-1",
+    );
+
+    expect(ir.properties.text).toBe("Edit team color styles");
+  });
 });

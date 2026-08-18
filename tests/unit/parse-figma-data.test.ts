@@ -165,4 +165,31 @@ describe("parseFigmaDataResponse", () => {
     expect(parsed.name).toBe("Empty");
     expect(parsed.nodes.get("0:1")?.type).toBe("CANVAS");
   });
+
+  it("parses a quoted multi-word `text=` attribute without cutting it off at the first space", () => {
+    // Regression: TEXT nodes without a template carry their content inline as
+    // `text="Some sentence with spaces"` — this used to be truncated to the first
+    // token because only {...}/[...] spans were treated as multi-space values.
+    const sample = [
+      'NAME: "Test"',
+      "",
+      "GLOBAL_VARS:",
+      "",
+      "ELEMENTS:",
+      "",
+      "COMPONENTS:",
+      "",
+      "COMPONENT_SETS:",
+      "",
+      "NODES:",
+      '[FRAME] "Root" #1:1',
+      '  [TEXT] "Edit team color styles" #1:21 layout={"mode":"none","sizing":{}} text="Edit team color styles" fills=fill_x',
+    ].join("\n");
+
+    const parsed = parseFigmaDataResponse(sample);
+    const textNode = parsed.nodes.get("1:21");
+    expect(textNode?.text).toBe("Edit team color styles");
+    // The attribute AFTER the quoted string must still parse correctly too.
+    expect(textNode?.fills).toBe("fill_x");
+  });
 });

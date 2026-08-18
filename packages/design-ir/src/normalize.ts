@@ -48,10 +48,16 @@ function extractChildren(raw: FigmaDesignContext): string[] {
 
 function extractProperties(raw: FigmaDesignContext): Record<string, unknown> {
   const properties = firstDefined(raw.properties, raw.props, raw.componentProperties, {});
-  if (properties && typeof properties === "object") {
-    return { ...(properties as Record<string, unknown>) };
+  const out =
+    properties && typeof properties === "object" ? { ...(properties as Record<string, unknown>) } : {};
+  // TEXT nodes carry their actual content in `text` (get_figma_data's NODES format) —
+  // never dropped, since it's the whole point of a TEXT node and can't be recovered
+  // from anywhere else once discarded here.
+  const text = raw.text;
+  if (typeof text === "string" && text.length > 0) {
+    out.text = text;
   }
-  return {};
+  return out;
 }
 
 /** Normalize the relevant style values into a TokenSet. */
@@ -86,7 +92,7 @@ export function extractTokens(raw: FigmaDesignContext): TokenSet {
       tokens.color = { hex };
     }
   }
-  const typography = firstDefined(raw.typography, raw.style, undefined);
+  const typography = firstDefined(raw.typography, raw.style, raw.textStyle, undefined);
   if (typography && typeof typography === "object") {
     tokens.typography = { ...(typography as Record<string, unknown>) };
   }
