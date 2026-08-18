@@ -14,7 +14,20 @@ function extractBounds(raw: FigmaDesignContext): Bounds | null {
     | { x: number; y: number; width: number; height: number }
     | undefined;
   const rel = raw.bounds as Bounds | undefined;
-  const box = (abs ?? rel) as Bounds | undefined;
+  // `get_figma_data`'s ParsedFigmaNode shape: dimensions (and sometimes location) live
+  // under `layout`, not top-level — no x/y is provided at all, default to origin.
+  const layout = raw.layout as
+    | { dimensions?: { width?: number; height?: number }; locationRelativeToParent?: { x?: number; y?: number } }
+    | undefined;
+  const fromLayout: Bounds | undefined = layout?.dimensions
+    ? {
+        x: layout.locationRelativeToParent?.x ?? 0,
+        y: layout.locationRelativeToParent?.y ?? 0,
+        width: layout.dimensions.width ?? 0,
+        height: layout.dimensions.height ?? 0,
+      }
+    : undefined;
+  const box = (abs ?? rel ?? fromLayout) as Bounds | undefined;
   if (!box || typeof box.width !== "number") return null;
   return { x: box.x, y: box.y, width: box.width, height: box.height };
 }
@@ -34,7 +47,7 @@ function extractChildren(raw: FigmaDesignContext): string[] {
 }
 
 function extractProperties(raw: FigmaDesignContext): Record<string, unknown> {
-  const properties = firstDefined(raw.properties, raw.props, {});
+  const properties = firstDefined(raw.properties, raw.props, raw.componentProperties, {});
   if (properties && typeof properties === "object") {
     return { ...(properties as Record<string, unknown>) };
   }
@@ -54,7 +67,7 @@ export function extractTokens(raw: FigmaDesignContext): TokenSet {
       b: String(c.b ?? c.blue ?? 0),
       a: String(c.a ?? c.alpha ?? 1),
     };
-  } else if (Array.isArray(fills) && fills.length > 0) {
+  } else if (Array.isArray(fills) && fills.length > 0 && typeof fills[0] === "object") {
     const f = fills[0] as Record<string, unknown>;
     const fc = f.color as Record<string, unknown> | undefined;
     if (fc) {
@@ -64,6 +77,13 @@ export function extractTokens(raw: FigmaDesignContext): TokenSet {
         b: String(fc.b ?? 0),
         a: String(fc.a ?? 1),
       };
+    }
+  } else {
+    // `get_figma_data`'s resolved fills: a hex string, or an array of hex strings
+    // (GLOBAL_VARS color entries are `['#RRGGBB']`-shaped).
+    const hex = typeof fills === "string" ? fills : Array.isArray(fills) ? fills[0] : undefined;
+    if (typeof hex === "string") {
+      tokens.color = { hex };
     }
   }
   const typography = firstDefined(raw.typography, raw.style, undefined);

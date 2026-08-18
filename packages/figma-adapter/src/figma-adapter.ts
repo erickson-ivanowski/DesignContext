@@ -3,6 +3,7 @@ import type {
   FigmaDesignContext,
   FigmaMetadata,
 } from "@designcontext/core";
+import { parseFigmaDataResponse, type ParsedFigmaData } from "./parse-figma-data";
 
 /** Minimal client for the Figma MCP (tool call abstraction). */
 export interface FigmaMcpClient {
@@ -37,71 +38,64 @@ function imageOf(result: { content: unknown[] }): Buffer | null {
   return null;
 }
 
-function parseJson(text: string): unknown {
-  if (!text) return {};
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-}
-
-function extractChildIds(children: unknown): string[] | undefined {
-  if (!Array.isArray(children)) return undefined;
-  const ids: string[] = [];
-  for (const child of children) {
-    if (typeof child === "string") {
-      if (child.length > 0) ids.push(child);
-      continue;
-    }
-    if (child && typeof child === "object") {
-      const obj = child as Record<string, unknown>;
-      const id = obj.id ?? obj.nodeId;
-      if (typeof id === "string" && id.length > 0) ids.push(id);
-    }
-  }
-  return ids;
-}
-
 /**
- * Client of the Figma MCP (source document §11). Metadata-first: try a
- * lightweight `get_metadata` tool when the Figma server exposes one, falling
- * back to `get_design_context` (cached) otherwise. Unknown tool names fail
- * gracefully and fall through to the next candidate.
+ * Client of the Figma MCP, targeting `figma-developer-mcp`'s `get_figma_data` tool
+ * (the current API — an older generation exposed `get_metadata`/`get_design_context`
+ * returning JSON; that shape is gone). `get_figma_data` returns a whole subtree in one
+ * call (a custom compact YAML-like text format, not JSON — see parse-figma-data.ts), so
+ * this adapter fetches once per distinct scope root and serves every subsequent
+ * getMetadata/getDesignContext call for a node already covered by that fetch from an
+ * in-memory cache — DesignIndexer's per-node call pattern is unchanged, only the cost
+ * of satisfying it drops after the first call.
  */
 export class FigmaMcpAdapter implements FigmaAdapter {
-  private readonly contextCache = new Map<string, FigmaDesignContext>();
-  private readonly metadataTools = ["get_metadata", "get_meta", "get_node"];
+  private readonly cache = new Map<string, ParsedFigmaData>();
+  private readonly fetchDepth = 10;
 
-  constructor(private readonly client: FigmaMcpClient) {}
+  constructor(
+    private readonly client: FigmaMcpClient,
+    private readonly fileKey: string,
+  ) {}
 
   async getMetadata(nodeId: string): Promise<FigmaMetadata> {
-    for (const tool of this.metadataTools) {
-      try {
-        const result = await this.client.callTool(tool, { nodeId });
-        const parsed = parseJson(textOf(result));
-        if (parsed && typeof parsed === "object") {
-          return this.metadataFrom(parsed as Record<string, unknown>, nodeId);
-        }
-      } catch {
-        // Tool not available or failed — try the next candidate.
-      }
+    const data = await this.ensureFetched(nodeId);
+    const node = data.nodes.get(nodeId);
+    if (!node) {
+      throw new Error(`Figma node "${nodeId}" not found in file "${this.fileKey}".`);
     }
-    const context = await this.fetchContext(nodeId);
-    return this.metadataFromContext(context, nodeId);
+    return {
+      nodeId: node.id,
+      name: node.name,
+      type: node.type,
+      parentId: node.parentId,
+      children: node.children,
+      componentId: node.componentId ?? null,
+      lastModified: null,
+    };
   }
 
   async getDesignContext(nodeId: string): Promise<FigmaDesignContext> {
-    return this.fetchContext(nodeId);
+    const data = await this.ensureFetched(nodeId);
+    const node = data.nodes.get(nodeId);
+    if (!node) {
+      throw new Error(`Figma node "${nodeId}" not found in file "${this.fileKey}".`);
+    }
+    return node as unknown as FigmaDesignContext;
   }
 
   async getScreenshot(nodeId: string): Promise<Buffer> {
+    // figma-developer-mcp's current screenshot tool (download_figma_images) writes to
+    // disk and returns file paths rather than inline bytes — a materially different
+    // contract from this method's Buffer return. Try the legacy `get_screenshot` tool
+    // name first (still exposed by some self-hosted/`--url` Figma MCP servers) rather
+    // than silently returning nothing.
     const result = await this.client.callTool("get_screenshot", { nodeId });
     const image = imageOf(result);
     if (image) return image;
-    const parsed = parseJson(textOf(result)) as Record<string, unknown>;
-    const data = parsed.image ?? parsed.data ?? "";
-    return Buffer.from(String(data), "base64");
+    throw new Error(
+      "This Figma connection does not support inline screenshots " +
+        "(figma-developer-mcp's current API writes images to disk, not to the response).",
+    );
   }
 
   async getImage(nodeId: string): Promise<Buffer> {
@@ -110,39 +104,20 @@ export class FigmaMcpAdapter implements FigmaAdapter {
 
   async close(): Promise<void> {
     await this.client.close?.();
-    this.contextCache.clear();
+    this.cache.clear();
   }
 
-  private async fetchContext(nodeId: string): Promise<FigmaDesignContext> {
-    const cached = this.contextCache.get(nodeId);
-    if (cached) return cached;
-    const result = await this.client.callTool("get_design_context", { nodeId });
-    const parsed = parseJson(textOf(result));
-    const context = (parsed ?? {}) as FigmaDesignContext;
-    this.contextCache.set(nodeId, context);
-    return context;
-  }
-
-  private metadataFrom(
-    raw: Record<string, unknown>,
-    nodeId: string,
-  ): FigmaMetadata {
-    return {
+  private async ensureFetched(nodeId: string): Promise<ParsedFigmaData> {
+    for (const data of this.cache.values()) {
+      if (data.nodes.has(nodeId)) return data;
+    }
+    const result = await this.client.callTool("get_figma_data", {
+      fileKey: this.fileKey,
       nodeId,
-      name: String(raw.name ?? raw.nodeName ?? nodeId),
-      type: String(raw.type ?? raw.nodeType ?? "FRAME"),
-      parentId: (raw.parentId ?? raw.parent_id ?? null) as string | null,
-      children: extractChildIds(raw.children),
-      componentId: (raw.componentId ?? raw.component_id ?? null) as string | null,
-      lastModified: (raw.lastModified ?? raw.last_modified ?? null) as string | null,
-    };
-  }
-
-  private metadataFromContext(
-    context: FigmaDesignContext,
-    nodeId: string,
-  ): FigmaMetadata {
-    const node = (context.node ?? context.root ?? context) as Record<string, unknown>;
-    return this.metadataFrom(node, nodeId);
+      depth: this.fetchDepth,
+    });
+    const parsed = parseFigmaDataResponse(textOf(result));
+    this.cache.set(nodeId, parsed);
+    return parsed;
   }
 }

@@ -16,7 +16,7 @@ describe("Figma MCP stdio client", () => {
       command: process.execPath,
       args: [serverPath],
     });
-    const adapter = new FigmaMcpAdapter(client);
+    const adapter = new FigmaMcpAdapter(client, "file-checkout");
     const cache = new InMemoryCacheStore();
     const graph = new InMemoryDesignGraph(cache);
     const engine = new ContextEngineImpl(graph, cache);

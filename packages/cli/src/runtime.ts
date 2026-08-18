@@ -25,13 +25,14 @@ export interface FigmaMcpConnection {
 }
 
 /** Build a real Figma adapter backed by the Figma MCP server over stdio. */
-export function buildFigmaAdapter(conn: FigmaMcpConnection): FigmaMcpAdapter {
+export function buildFigmaAdapter(conn: FigmaMcpConnection, fileKey: string): FigmaMcpAdapter {
   return new FigmaMcpAdapter(
     new StdioFigmaClient({
       command: conn.command,
       args: conn.args,
       env: conn.env,
     }),
+    fileKey,
   );
 }
 
@@ -48,36 +49,45 @@ export async function resolveFigmaAdapter(
   projectRoot: string,
 ): Promise<FigmaAdapter> {
   if (fileConfig.figmaMcpUrl) {
-    return new FigmaMcpAdapter(new HttpFigmaClient(fileConfig.figmaMcpUrl));
+    return new FigmaMcpAdapter(new HttpFigmaClient(fileConfig.figmaMcpUrl), fileConfig.fileId);
   }
 
   if (fileConfig.figmaMcpEnv !== undefined) {
-    return buildFigmaAdapter({
-      command: fileConfig.figmaMcpCommand ?? "npx",
-      args: fileConfig.figmaMcpArgs ?? [],
-      env: fileConfig.figmaMcpEnv,
-    });
+    return buildFigmaAdapter(
+      {
+        command: fileConfig.figmaMcpCommand ?? "npx",
+        args: fileConfig.figmaMcpArgs ?? [],
+        env: fileConfig.figmaMcpEnv,
+      },
+      fileConfig.fileId,
+    );
   }
 
   const apiKey = await getSecret("figma-token");
   if (apiKey) {
-    return buildFigmaAdapter({
-      command: fileConfig.figmaMcpCommand ?? "npx",
-      args: fileConfig.figmaMcpArgs ?? ["-y", "figma-developer-mcp", "--stdio"],
-      env: { FIGMA_API_KEY: apiKey },
-    });
+    return buildFigmaAdapter(
+      {
+        command: fileConfig.figmaMcpCommand ?? "npx",
+        args: fileConfig.figmaMcpArgs ?? ["-y", "figma-developer-mcp", "--stdio"],
+        env: { FIGMA_API_KEY: apiKey },
+      },
+      fileConfig.fileId,
+    );
   }
 
   const discovered = discoverFigmaMcp(projectRoot);
   if (discovered?.url) {
-    return new FigmaMcpAdapter(new HttpFigmaClient(discovered.url));
+    return new FigmaMcpAdapter(new HttpFigmaClient(discovered.url), fileConfig.fileId);
   }
   if (discovered?.command) {
-    return buildFigmaAdapter({
-      command: discovered.command,
-      args: discovered.args ?? [],
-      env: discovered.env ?? {},
-    });
+    return buildFigmaAdapter(
+      {
+        command: discovered.command,
+        args: discovered.args ?? [],
+        env: discovered.env ?? {},
+      },
+      fileConfig.fileId,
+    );
   }
 
   process.stderr.write(

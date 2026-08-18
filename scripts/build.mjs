@@ -40,6 +40,7 @@ await esbuild.build({
     "pino",
     "zod",
     "smol-toml",
+    "js-yaml",
     "@modelcontextprotocol/*",
     "keytar",
     "node:*",
