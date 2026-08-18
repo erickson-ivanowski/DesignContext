@@ -14,6 +14,7 @@ import { diff } from "./diff";
 import { inspect } from "./inspect";
 import { clearCache } from "./clear-cache";
 import { setup } from "./setup";
+import { getSecret } from "./secrets";
 
 declare const __DESIGNCONTEXT_VERSION__: string | undefined;
 // esbuild replaces __DESIGNCONTEXT_VERSION__ with package.json's version at build time
@@ -82,6 +83,11 @@ function migrateAndLoad(projectRoot: string) {
     );
   }
   return config;
+}
+
+function hasStaticConnection(config: ReturnType<typeof migrateAndLoad>, fileId: string): boolean {
+  const fileConfig = config.figmaFiles.find((f) => f.fileId === fileId);
+  return Boolean(fileConfig?.figmaMcpUrl || fileConfig?.figmaMcpCommand || fileConfig?.figmaMcpEnv);
 }
 
 function resolveTargetFile(ctx: AppContext, alias: string | undefined, requireExplicit: boolean): FileRuntime {
@@ -231,14 +237,23 @@ program
         const result = [];
         for (const file of ctx.files) {
           const nodes = await ctx.graph.all(file.fileId);
+          const hasConnection =
+            hasStaticConnection(config, file.fileId) || Boolean(await getSecret("figma-token"));
           result.push({
             alias: file.alias,
             fileId: file.fileId,
             screens: nodes.filter((n) => ["SCREEN", "FRAME", "CANVAS"].includes(n.type)).length,
             components: nodes.filter((n) => n.componentId != null).length,
+            hasConnection,
           });
         }
         return result;
+      },
+      getFileConnectionState: async (fileId) => {
+        const hasConnection =
+          hasStaticConnection(config, fileId) || Boolean(await getSecret("figma-token"));
+        const indexedNodes = (await ctx.graph.all(fileId)).length;
+        return { hasConnection, indexedNodes };
       },
       resolveFileId: async (aliasOrId) => {
         if (aliasOrId) {

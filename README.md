@@ -199,6 +199,11 @@ when the agent isn't sure which alias to pass. `design_find` is the one exceptio
 omitted it searches across *all* connected files, and each match's `file` field reports which
 file (by alias) it came from.
 
+If a file has no indexed data yet, tools return an actionable message instead of a bare "not
+found" — telling the agent exactly whether the file needs a Figma connection (with the
+`connect --token` command to run) or just a `scan`, so the agent can walk the user through
+fixing it without them digging through docs.
+
 ## Project structure
 
 npm workspaces monorepo, one package per architecture boundary:

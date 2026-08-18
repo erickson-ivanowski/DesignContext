@@ -25,6 +25,7 @@ export const listFilesOutput = z.array(
     fileId: z.string(),
     screens: z.number(),
     components: z.number(),
+    hasConnection: z.boolean(),
   }),
 );
 
@@ -139,6 +140,14 @@ export interface FileSummary {
   fileId: string;
   screens: number;
   components: number;
+  hasConnection: boolean;
+}
+
+export interface FileConnectionState {
+  /** A figmaMcp-or-token connection method is configured for this file. */
+  hasConnection: boolean;
+  /** Nodes currently indexed for this file, across all scopes. */
+  indexedNodes: number;
 }
 
 export interface ToolContext {
@@ -150,7 +159,30 @@ export interface ToolContext {
   listFiles: () => Promise<FileSummary[]>;
   /** Resolve an alias or raw file id to a Figma file id. Throws when unresolvable or ambiguous (input omitted, >1 file configured). */
   resolveFileId: (aliasOrId: string | undefined) => Promise<string>;
+  getFileConnectionState: (fileId: string) => Promise<FileConnectionState>;
   getScreenshot?: (nodeId: string, fileId: string) => Promise<Buffer>;
+}
+
+/**
+ * Every content-serving tool resolves a fileId, then looks up a node. If the file has
+ * never been indexed, that lookup fails with a generic "no node found" — useless to an
+ * agent trying to help the user. Check first and fail with exactly what's missing and
+ * the command to fix it, so the agent can walk the user through setup instead of guessing.
+ */
+async function assertFileReady(ctx: ToolContext, fileId: string, aliasOrId: string): Promise<void> {
+  const state = await ctx.getFileConnectionState(fileId);
+  if (state.indexedNodes > 0) return;
+
+  if (!state.hasConnection) {
+    throw new Error(
+      `No Figma connection is configured for "${aliasOrId}" and it has never been scanned. ` +
+        "Ask the user to generate a token at https://figma.com/settings → Personal Access Tokens, then run: " +
+        `designcontext connect --file <url> --token <token>, then designcontext scan --file ${aliasOrId}`,
+    );
+  }
+  throw new Error(
+    `"${aliasOrId}" is connected but has never been scanned. Run: designcontext scan --file ${aliasOrId}`,
+  );
 }
 
 export interface ToolDefinition {
@@ -186,6 +218,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { screen, file } = input as { screen: string; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         const result = await ctx.engine.getScreen(screen, fileId);
         return result.content;
       },
@@ -198,6 +231,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { nodeId, depth, file } = input as { nodeId: string; depth: number; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         return buildStructure(ctx.graph, fileId, nodeId, depth);
       },
     },
@@ -209,6 +243,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { name, nodeId, file } = input as { name?: string; nodeId?: string; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         const id = nodeId ?? name!;
         const result = await ctx.engine.getComponent(id, fileId);
         return result.content;
@@ -222,6 +257,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { scope, file } = input as { scope?: string; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         const result = await ctx.engine.getTokens(scope, fileId);
         return result.content;
       },
@@ -234,6 +270,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { screen, file } = input as { screen: string; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         return ctx.engine.getChanges(screen, fileId);
       },
     },
@@ -266,6 +303,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { nodeId, level, file } = input as { nodeId: string; level: 0 | 1 | 2 | 3 | 4; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         const result = await ctx.engine.getContext(nodeId, level, fileId);
         return result.content;
       },
@@ -281,6 +319,7 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
       handler: async (input) => {
         const { nodeId, file } = input as { nodeId: string; file?: string };
         const fileId = await ctx.resolveFileId(file);
+        await assertFileReady(ctx, fileId, file ?? fileId);
         return ctx.getScreenshot!(nodeId, fileId);
       },
     });
