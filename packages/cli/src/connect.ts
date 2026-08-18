@@ -14,6 +14,8 @@ export interface ConnectOptions {
   file?: string;
   alias?: string;
   url?: string;
+  /** Register this file with no Figma connection of its own — an AI agent will feed it data via `design_import` instead of designcontext connecting to Figma itself. */
+  importOnly?: boolean;
 }
 
 export class ConnectError extends Error {}
@@ -75,11 +77,13 @@ export async function connect(
   const hasConnection = Boolean(
     figmaMcpUrl || figmaMcpCommand || figmaMcpEnv !== undefined || opts.token,
   );
-  if (!hasConnection) {
+  if (!hasConnection && !opts.importOnly) {
     throw new ConnectError(
       "No Figma MCP found and no --token/--url given.\n" +
         "Generate a token at https://figma.com/settings → Personal Access Tokens, then run:\n" +
-        `  designcontext connect --file ${opts.file} --token <token>`,
+        `  designcontext connect --file ${opts.file} --token <token>\n` +
+        "Or, if you'd rather have your AI agent fetch this file's data itself (no token needed):\n" +
+        `  designcontext connect --file ${opts.file} --import-only`,
     );
   }
 
@@ -93,14 +97,15 @@ export async function connect(
     figmaMcpCommand,
     figmaMcpArgs,
     figmaMcpEnv,
+    importOnly: opts.importOnly ?? existing?.importOnly,
     addedAt: existing?.addedAt ?? new Date().toISOString(),
   };
 
   let alias = opts.alias ?? existing?.alias;
-  if (!alias) {
+  if (!alias && !opts.importOnly) {
     alias = await fetchDefaultAlias(draftFileConfig, projectRoot, nodeId);
   }
-  alias = dedupeAlias(alias, config.figmaFiles, fileId);
+  alias = dedupeAlias(alias ?? fileId, config.figmaFiles, fileId);
 
   const fileConfig: FigmaFileConfig = { ...draftFileConfig, alias };
 

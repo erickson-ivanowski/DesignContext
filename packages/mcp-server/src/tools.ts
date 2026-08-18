@@ -125,6 +125,21 @@ export const inspectOutput = z.unknown();
 
 export const screenshotInput = z.object({ nodeId: z.string(), file: fileField }).strict();
 
+export const importInput = z
+  .object({
+    file: z.string().describe("Alias or file id — must already be registered via `connect --import-only`."),
+    scopeNodeId: z.string().describe("The node this raw data is rooted at."),
+    rawData: z.string().describe("The agent's own Figma MCP tool's raw text output for scopeNodeId."),
+  })
+  .strict();
+export const importOutput = z.object({
+  discovered: z.number(),
+  indexed: z.number(),
+  changed: z.number(),
+  cached: z.number(),
+  warning: z.string().optional(),
+});
+
 // --- Handler context + tool definitions ---
 
 export interface ProjectSummary {
@@ -161,6 +176,12 @@ export interface ToolContext {
   resolveFileId: (aliasOrId: string | undefined) => Promise<string>;
   getFileConnectionState: (fileId: string) => Promise<FileConnectionState>;
   getScreenshot?: (nodeId: string, fileId: string) => Promise<Buffer>;
+  /** Index data an agent already fetched via its own Figma MCP access, in place of a live connection this process holds. */
+  importFigmaData?: (
+    fileId: string,
+    scopeNodeId: string,
+    rawData: string,
+  ) => Promise<{ discovered: number; indexed: number; changed: number; cached: number }>;
 }
 
 /**
@@ -321,6 +342,36 @@ export function createToolDefinitions(ctx: ToolContext): ToolDefinition[] {
         const fileId = await ctx.resolveFileId(file);
         await assertFileReady(ctx, fileId, file ?? fileId);
         return ctx.getScreenshot!(nodeId, fileId);
+      },
+    });
+  }
+
+  if (ctx.importFigmaData) {
+    tools.push({
+      name: "design_import",
+      description:
+        "Call this when design_get_screen/etc. report a file has no connection configured and the user " +
+        "doesn't want to generate a Figma token. Fetch the node's raw design data via your own Figma MCP " +
+        "tool (e.g. get_figma_data), then pass its exact raw text output here to index it.",
+      inputSchema: importInput,
+      outputSchema: importOutput,
+      handler: async (input) => {
+        const { file, scopeNodeId, rawData } = input as {
+          file: string;
+          scopeNodeId: string;
+          rawData: string;
+        };
+        const fileId = await ctx.resolveFileId(file);
+        const report = await ctx.importFigmaData!(fileId, scopeNodeId, rawData);
+        if (report.discovered === 0) {
+          return {
+            ...report,
+            warning:
+              "0 nodes parsed from rawData — its format may not match figma-developer-mcp's " +
+              "get_figma_data output. Consider suggesting the user generate a Figma token instead.",
+          };
+        }
+        return report;
       },
     });
   }

@@ -15,6 +15,10 @@ import {
   findInput,
   findOutput,
   inspectInput,
+  importInput,
+  importOutput,
+  createToolDefinitions,
+  type ToolContext,
 } from "@designcontext/mcp-server";
 
 describe("MCP tool contracts", () => {
@@ -108,5 +112,53 @@ describe("MCP tool contracts", () => {
 
     expect(inspectInput.parse({ nodeId: "1", level: 0 })).toEqual({ nodeId: "1", level: 0 });
     expect(() => inspectInput.parse({ nodeId: "1", level: 5 })).toThrow();
+  });
+
+  it("design_import validates input/output and is omitted unless ctx.importFigmaData is provided", () => {
+    expect(
+      importInput.parse({ file: "app", scopeNodeId: "0:1", rawData: "NAME: \"x\"" }),
+    ).toEqual({ file: "app", scopeNodeId: "0:1", rawData: 'NAME: "x"' });
+    expect(() => importInput.parse({ file: "app", scopeNodeId: "0:1" })).toThrow();
+
+    expect(importOutput.parse({ discovered: 3, indexed: 3, changed: 0, cached: 0 })).toMatchObject({
+      discovered: 3,
+    });
+
+    const baseCtx: ToolContext = {
+      engine: {} as ToolContext["engine"],
+      graph: {} as ToolContext["graph"],
+      getProject: async () => ({ name: "app", framework: "react", screens: [], components: [], tokens: [] }),
+      listFiles: async () => [],
+      resolveFileId: async () => "file-1",
+      getFileConnectionState: async () => ({ hasConnection: false, indexedNodes: 0 }),
+    };
+
+    expect(createToolDefinitions(baseCtx).some((t) => t.name === "design_import")).toBe(false);
+
+    const withImport: ToolContext = {
+      ...baseCtx,
+      importFigmaData: async () => ({ discovered: 0, indexed: 0, changed: 0, cached: 0 }),
+    };
+    const tools = createToolDefinitions(withImport);
+    expect(tools.some((t) => t.name === "design_import")).toBe(true);
+  });
+
+  it("design_import handler surfaces a warning when 0 nodes were discovered", async () => {
+    const ctx: ToolContext = {
+      engine: {} as ToolContext["engine"],
+      graph: {} as ToolContext["graph"],
+      getProject: async () => ({ name: "app", framework: "react", screens: [], components: [], tokens: [] }),
+      listFiles: async () => [],
+      resolveFileId: async () => "file-1",
+      getFileConnectionState: async () => ({ hasConnection: false, indexedNodes: 0 }),
+      importFigmaData: async () => ({ discovered: 0, indexed: 0, changed: 0, cached: 0 }),
+    };
+    const tool = createToolDefinitions(ctx).find((t) => t.name === "design_import")!;
+    const result = (await tool.handler({ file: "app", scopeNodeId: "0:1", rawData: "garbage" })) as {
+      discovered: number;
+      warning?: string;
+    };
+    expect(result.discovered).toBe(0);
+    expect(result.warning).toMatch(/0 nodes parsed/);
   });
 });

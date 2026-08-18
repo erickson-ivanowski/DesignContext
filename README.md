@@ -136,6 +136,22 @@ designcontext connect --file "https://www.figma.com/design/qRs456TuV/Cancelament
 Both files now share the same local graph/cache and the same MCP server; every other command
 that touches a specific file takes `--file <alias>` to pick between them.
 
+#### No Figma token? Let the agent fetch the data instead
+
+If you don't want to generate a Figma Personal Access Token (e.g. a restricted/View-seat
+account), and your AI agent already has its own Figma MCP connector, register the file with
+`--import-only` — no connection, no token:
+
+```bash
+designcontext connect --file "https://www.figma.com/design/aBc123XyZ/Checkout-Flow" --import-only
+```
+
+Then ask your agent to fetch that file's data with its own Figma MCP tool and hand it to
+DesignContext via the `design_import` MCP tool — it reuses the exact same scan/cache pipeline
+as a normal `designcontext scan`, just fed by data the agent already had access to instead of a
+connection DesignContext holds itself. See [Agent integration](#agent-integration) below for
+`design_import`'s parameters.
+
 ### Index a screen
 
 ```bash
@@ -174,7 +190,7 @@ can still start it without you fixing your `PATH` first.
 | Command | Description |
 | --- | --- |
 | `designcontext init [name]` | Create `.designcontext/` project config. |
-| `designcontext connect --file <url> [--alias <name>] [--token <token>] [--url <url>]` | Connect a Figma file — `--file` accepts a pasted Figma URL or a bare file key. Auto-reuses an existing Figma MCP; auto-fetches the file's name as the default alias when `--alias` is omitted. Run again with a different `--file` to connect an additional file to the same project. Throws a clear error instead of silently succeeding when no file or connection method is given. |
+| `designcontext connect --file <url> [--alias <name>] [--token <token>] [--url <url>] [--import-only]` | Connect a Figma file — `--file` accepts a pasted Figma URL or a bare file key. Auto-reuses an existing Figma MCP; auto-fetches the file's name as the default alias when `--alias` is omitted. Run again with a different `--file` to connect an additional file to the same project. Throws a clear error instead of silently succeeding when no file or connection method is given, unless `--import-only` is passed — which registers the file with no connection of its own, for use with `design_import` (see [Agent integration](#agent-integration)). |
 | `designcontext scan [--file <alias>]` | Index one file's scope, or every configured file (sequentially, one report line each) when `--file` is omitted. Accepts `--node <id>` (requires `--file` once the project tracks more than one file) and `--incremental`. |
 | `designcontext status` | Show aggregate + per-file screens/components/tokens/cache breakdown. No `--file` flag — always reports on every connected file. |
 | `designcontext diff [screen] --file <alias>` | Show only what changed since the last scan for one file. `--file` is required once the project tracks more than one file (errors listing the known aliases otherwise). |
@@ -214,6 +230,17 @@ If a file has no indexed data yet, tools return an actionable message instead of
 found" — telling the agent exactly whether the file needs a Figma connection (with the
 `connect --token` command to run) or just a `scan`, so the agent can walk the user through
 fixing it without them digging through docs.
+
+### `design_import` — index data the agent already fetched itself
+
+When a file was registered with `connect --file <url> --import-only`, the MCP server also
+exposes `design_import`: `{file, scopeNodeId, rawData}` → `{discovered, indexed, changed,
+cached, warning?}`. The agent calls its own Figma MCP tool (e.g. `get_figma_data`) for
+`scopeNodeId`, then passes that tool's exact raw text output as `rawData` — DesignContext
+parses it and runs it through the same indexing pipeline a normal `scan` uses. If `rawData`
+doesn't parse into any nodes (the agent's Figma MCP returns a different format than
+`figma-developer-mcp`'s), the response carries a `warning` instead of silently indexing
+nothing, so the agent can fall back to suggesting a token.
 
 ## Project structure
 

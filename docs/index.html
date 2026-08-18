@@ -84,6 +84,7 @@
   }
   h2 .num { color: var(--accent); font-weight: 800; margin-right: 8px; }
   h3 { font-size: 18px; margin: 22px 0 8px; }
+  h4 { font-size: 15px; margin: 20px 0 8px; color: var(--text); }
 
   .card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
@@ -403,6 +404,23 @@
         <p data-i18n="pt">Os dois arquivos passam a compartilhar o mesmo grafo/cache local e o mesmo servidor MCP. Assim que houver mais de um arquivo, os comandos que operam em um arquivo específico (<code>diff</code>, <code>inspect</code>) exigem <code>--file &lt;apelido&gt;</code> para saber qual usar.</p>
         <p data-i18n="en">Both files now share the same local graph/cache and the same MCP server. As soon as there's more than one file, the commands that operate on a specific file (<code>diff</code>, <code>inspect</code>) require <code>--file &lt;alias&gt;</code> to know which one to use.</p>
         <p data-i18n="es">Ambos archivos pasan a compartir el mismo grafo/cache local y el mismo servidor MCP. En cuanto haya más de un archivo, los comandos que operan sobre un archivo específico (<code>diff</code>, <code>inspect</code>) requieren <code>--file &lt;alias&gt;</code> para saber cuál usar.</p>
+
+        <h4 data-i18n="pt">Sem token do Figma? Deixe o agente buscar os dados</h4>
+        <h4 data-i18n="en">No Figma token? Let the agent fetch the data</h4>
+        <h4 data-i18n="es">¿Sin token de Figma? Deja que el agente busque los datos</h4>
+
+        <p data-i18n="pt">Se você não quer gerar um Personal Access Token do Figma (ex.: conta com acesso só de leitura) e seu agente de IA já tem acesso próprio ao Figma MCP dele, registre o arquivo com <code>--import-only</code> — sem conexão, sem token:</p>
+        <p data-i18n="en">If you don't want to generate a Figma Personal Access Token (e.g. a restricted/View-only account) and your AI agent already has its own Figma MCP access, register the file with <code>--import-only</code> — no connection, no token:</p>
+        <p data-i18n="es">Si no quieres generar un Personal Access Token de Figma (p. ej. una cuenta con acceso solo de lectura) y tu agente de IA ya tiene su propio acceso al Figma MCP, registra el archivo con <code>--import-only</code> — sin conexión, sin token:</p>
+        <pre><code><span class="prompt">$</span> designcontext connect --file "https://www.figma.com/design/aBc123XyZ/Checkout-Flow" --import-only</code></pre>
+
+        <p data-i18n="pt">Depois, peça ao agente para buscar os dados desse arquivo com a ferramenta Figma MCP dele e repassar para o DesignContext através da ferramenta MCP <code>design_import</code> — ela usa exatamente o mesmo pipeline de scan/cache de um <code>designcontext scan</code> normal, só que alimentado por dados que o agente já tinha acesso, em vez de uma conexão que o DesignContext mantém sozinho.</p>
+        <p data-i18n="en">Then ask the agent to fetch that file's data with its own Figma MCP tool and hand it to DesignContext through the <code>design_import</code> MCP tool — it uses the exact same scan/cache pipeline as a normal <code>designcontext scan</code>, just fed by data the agent already had access to, instead of a connection DesignContext holds itself.</p>
+        <p data-i18n="es">Después, pídele al agente que busque los datos de ese archivo con su propia herramienta Figma MCP y se los pase a DesignContext mediante la herramienta MCP <code>design_import</code> — usa exactamente el mismo pipeline de scan/cache que un <code>designcontext scan</code> normal, solo que alimentado por datos a los que el agente ya tenía acceso, en vez de una conexión que DesignContext mantiene por sí mismo.</p>
+
+        <p data-i18n="pt">Se os dados brutos não tiverem o formato esperado, a ferramenta retorna um aviso claro em vez de indexar silenciosamente um resultado vazio — veja a seção de integração com agentes abaixo para os parâmetros de <code>design_import</code>.</p>
+        <p data-i18n="en">If the raw data doesn't match the expected format, the tool returns a clear warning instead of silently indexing an empty result — see the agent integration section below for <code>design_import</code>'s parameters.</p>
+        <p data-i18n="es">Si los datos brutos no tienen el formato esperado, la herramienta devuelve un aviso claro en vez de indexar silenciosamente un resultado vacío — mira la sección de integración con agentes más abajo para los parámetros de <code>design_import</code>.</p>
       </div>
     </div>
 
@@ -522,7 +540,7 @@
       <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
       <tbody>
         <tr><td><code>init [nome]</code></td><td>Cria a pasta <code>.designcontext/</code> com a configuração do projeto.</td></tr>
-        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Conecta um arquivo do Figma — <code>--file</code> aceita um link colado do Figma ou um id de arquivo. Detecta o nome real do arquivo como apelido padrão (ou use <code>--alias</code>). Rode de novo com outro link para conectar mais arquivos. Aceita <code>--token</code> e <code>--url</code>.</td></tr>
+        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Conecta um arquivo do Figma — <code>--file</code> aceita um link colado do Figma ou um id de arquivo. Detecta o nome real do arquivo como apelido padrão (ou use <code>--alias</code>). Rode de novo com outro link para conectar mais arquivos. Aceita <code>--token</code>, <code>--url</code> e <code>--import-only</code> (registra sem conexão, para usar com <code>design_import</code>).</td></tr>
         <tr><td><code>scan</code></td><td>Indexa o escopo. Sem <code>--file</code>: escaneia todos os arquivos configurados. Aceita <code>--file &lt;apelido&gt;</code>, <code>--node &lt;id&gt;</code> e <code>--incremental</code>.</td></tr>
         <tr><td><code>status</code></td><td>Mostra telas, componentes e tokens indexados (total e por arquivo), além do tamanho do cache. Não tem <code>--file</code> — sempre relata todos os arquivos.</td></tr>
         <tr><td><code>diff [tela]</code></td><td>Mostra só o que mudou desde o último scan. Exige <code>--file &lt;apelido&gt;</code> quando há mais de um arquivo conectado.</td></tr>
@@ -535,7 +553,7 @@
       <thead><tr><th>Command</th><th>What it does</th></tr></thead>
       <tbody>
         <tr><td><code>init [name]</code></td><td>Creates the <code>.designcontext/</code> folder with the project's configuration.</td></tr>
-        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Connects a Figma file — <code>--file</code> accepts a pasted Figma link or a bare file id. Detects the file's real name as the default alias (or pass <code>--alias</code>). Run again with a different link to connect additional files. Accepts <code>--token</code> and <code>--url</code>.</td></tr>
+        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Connects a Figma file — <code>--file</code> accepts a pasted Figma link or a bare file id. Detects the file's real name as the default alias (or pass <code>--alias</code>). Run again with a different link to connect additional files. Accepts <code>--token</code>, <code>--url</code>, and <code>--import-only</code> (registers with no connection, for use with <code>design_import</code>).</td></tr>
         <tr><td><code>scan</code></td><td>Indexes the scope. Without <code>--file</code>: scans every configured file. Accepts <code>--file &lt;alias&gt;</code>, <code>--node &lt;id&gt;</code>, and <code>--incremental</code>.</td></tr>
         <tr><td><code>status</code></td><td>Shows indexed screens, components, and tokens (aggregate and per file), plus cache size. No <code>--file</code> flag — always reports every file.</td></tr>
         <tr><td><code>diff [screen]</code></td><td>Shows only what changed since the last scan. Requires <code>--file &lt;alias&gt;</code> once more than one file is connected.</td></tr>
@@ -548,7 +566,7 @@
       <thead><tr><th>Comando</th><th>Qué hace</th></tr></thead>
       <tbody>
         <tr><td><code>init [nombre]</code></td><td>Crea la carpeta <code>.designcontext/</code> con la configuración del proyecto.</td></tr>
-        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Conecta un archivo de Figma — <code>--file</code> acepta un link pegado de Figma o un id de archivo. Detecta el nombre real del archivo como alias predeterminado (o usa <code>--alias</code>). Ejecuta de nuevo con otro link para conectar más archivos. Acepta <code>--token</code> y <code>--url</code>.</td></tr>
+        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Conecta un archivo de Figma — <code>--file</code> acepta un link pegado de Figma o un id de archivo. Detecta el nombre real del archivo como alias predeterminado (o usa <code>--alias</code>). Ejecuta de nuevo con otro link para conectar más archivos. Acepta <code>--token</code>, <code>--url</code> y <code>--import-only</code> (registra sin conexión, para usar con <code>design_import</code>).</td></tr>
         <tr><td><code>scan</code></td><td>Indexa el alcance. Sin <code>--file</code>: escanea todos los archivos configurados. Acepta <code>--file &lt;alias&gt;</code>, <code>--node &lt;id&gt;</code> y <code>--incremental</code>.</td></tr>
         <tr><td><code>status</code></td><td>Muestra pantallas, componentes y tokens indexados (total y por archivo), además del tamaño del cache. No tiene <code>--file</code> — siempre reporta todos los archivos.</td></tr>
         <tr><td><code>diff [pantalla]</code></td><td>Muestra solo lo que cambió desde el último scan. Requiere <code>--file &lt;alias&gt;</code> cuando hay más de un archivo conectado.</td></tr>
@@ -611,6 +629,7 @@
         <tr><td><code>design_get_changes</code></td><td>Só o que mudou desde a última versão.</td></tr>
         <tr><td><code>design_find</code></td><td>Busca por nome de tela ou componente. Sem <code>file</code>, busca em todos os arquivos conectados.</td></tr>
         <tr><td><code>design_inspect</code></td><td>Aprofunda o contexto de um nó, nível a nível.</td></tr>
+        <tr><td><code>design_import</code></td><td>Só aparece se algum arquivo foi conectado com <code>--import-only</code>. Indexa dados que o próprio agente buscou com sua ferramenta Figma MCP — veja "Sem token do Figma?" no passo 3.</td></tr>
       </tbody>
     </table>
     <table data-i18n="en">
@@ -624,6 +643,7 @@
         <tr><td><code>design_get_changes</code></td><td>Only what changed since the last version.</td></tr>
         <tr><td><code>design_find</code></td><td>Search by screen or component name. Without <code>file</code>, searches every connected file.</td></tr>
         <tr><td><code>design_inspect</code></td><td>Drills into a node's context, level by level.</td></tr>
+        <tr><td><code>design_import</code></td><td>Only appears if a file was connected with <code>--import-only</code>. Indexes data the agent fetched itself with its own Figma MCP tool — see "No Figma token?" in step 3.</td></tr>
       </tbody>
     </table>
     <table data-i18n="es">
@@ -637,6 +657,7 @@
         <tr><td><code>design_get_changes</code></td><td>Solo lo que cambió desde la última versión.</td></tr>
         <tr><td><code>design_find</code></td><td>Búsqueda por nombre de pantalla o componente. Sin <code>file</code>, busca en todos los archivos conectados.</td></tr>
         <tr><td><code>design_inspect</code></td><td>Profundiza en el contexto de un nodo, nivel a nivel.</td></tr>
+        <tr><td><code>design_import</code></td><td>Solo aparece si algún archivo fue conectado con <code>--import-only</code>. Indexa datos que el propio agente buscó con su herramienta Figma MCP — mira "¿Sin token de Figma?" en el paso 3.</td></tr>
       </tbody>
     </table>
 

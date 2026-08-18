@@ -100,6 +100,8 @@ export interface FigmaFileConfig {
   figmaMcpArgs?: string[];
   figmaMcpEnv?: Record<string, string>;
   figmaMcpUrl?: string;
+  /** True when this file has no Figma connection of its own — an AI agent feeds it data via `design_import` instead. */
+  importOnly?: boolean;
   addedAt: string;
 }
 

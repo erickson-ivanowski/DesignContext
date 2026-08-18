@@ -6,6 +6,8 @@ import {
   saveProjectConfig,
 } from "@designcontext/cache";
 import { startServer } from "@designcontext/mcp-server";
+import { DesignIndexer } from "@designcontext/core";
+import { ImportedFigmaAdapter, parseFigmaDataResponse } from "@designcontext/figma-adapter";
 import { createAppContext, fileByAliasOrId, type AppContext, type FileRuntime } from "./runtime";
 import { connect, ConnectError } from "./connect";
 import { scanFile } from "./scan";
@@ -45,24 +47,31 @@ program
   .option("--url <url>", "reuse a hosted Figma MCP server over HTTP")
   .option("--file <urlOrFileId>", "Figma file — paste a Figma URL or a bare file id")
   .option("--alias <name>", "short name for this file (defaults to the file's own name)")
+  .option(
+    "--import-only",
+    "register the file with no Figma connection — an AI agent feeds it data via the design_import MCP tool instead",
+  )
   .description("Connect a Figma file (auto-reuses an existing Figma MCP when possible)")
-  .action(async (opts: { token?: string; url?: string; file?: string; alias?: string }) => {
-    try {
-      const fileConfig = await connect(process.cwd(), {
-        token: opts.token,
-        url: opts.url,
-        file: opts.file,
-        alias: opts.alias,
-      });
-      process.stdout.write(`Connected "${fileConfig.alias}" (${fileConfig.fileId}).\n`);
-    } catch (err) {
-      if (err instanceof ConnectError) {
-        process.stderr.write(`${err.message}\n`);
-        process.exit(1);
+  .action(
+    async (opts: { token?: string; url?: string; file?: string; alias?: string; importOnly?: boolean }) => {
+      try {
+        const fileConfig = await connect(process.cwd(), {
+          token: opts.token,
+          url: opts.url,
+          file: opts.file,
+          alias: opts.alias,
+          importOnly: opts.importOnly,
+        });
+        process.stdout.write(`Connected "${fileConfig.alias}" (${fileConfig.fileId}).\n`);
+      } catch (err) {
+        if (err instanceof ConnectError) {
+          process.stderr.write(`${err.message}\n`);
+          process.exit(1);
+        }
+        throw err;
       }
-      throw err;
-    }
-  });
+    },
+  );
 
 function requireFiles(config: ReturnType<typeof migrateAndLoad>): asserts config is ReturnType<typeof migrateAndLoad> {
   if (config.figmaFiles.length === 0) {
@@ -270,6 +279,15 @@ program
         }
         const known = ctx.files.map((f) => f.alias).join(", ");
         throw new Error(`This project tracks multiple files — pass \`file\`. Known files: ${known}`);
+      },
+      importFigmaData: async (fileId, scopeNodeId, rawData) => {
+        const parsed = parseFigmaDataResponse(rawData);
+        if (parsed.nodes.size === 0) {
+          return { discovered: 0, indexed: 0, changed: 0, cached: 0, fullScan: true };
+        }
+        const adapter = new ImportedFigmaAdapter(parsed);
+        const indexer = new DesignIndexer({ adapter, graph: ctx.graph, cache: ctx.cache, fileId });
+        return indexer.fullScan(scopeNodeId);
       },
     });
   });
