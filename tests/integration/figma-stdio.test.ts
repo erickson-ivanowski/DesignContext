@@ -25,7 +25,7 @@ describe("Figma MCP stdio client", () => {
     const report = await indexer.fullScan("0:1");
     expect(report.discovered).toBe(3);
 
-    const screen = await engine.getScreen("0:1");
+    const screen = await engine.getScreen("0:1", "file-checkout");
     expect((screen.content as { screen: string }).screen).toBe("Checkout");
 
     const screenshot = await adapter.getScreenshot("0:1");

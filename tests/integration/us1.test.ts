@@ -9,7 +9,7 @@ describe("US1: index a design and get a screen summary", () => {
     expect(report.discovered).toBe(3);
     expect(report.indexed).toBe(3);
 
-    const screen = await engine.getScreen("0:1");
+    const screen = await engine.getScreen("0:1", "file-checkout");
     const content = screen.content as {
       screen: string;
       sections: string[];
@@ -28,7 +28,7 @@ describe("US1: index a design and get a screen summary", () => {
     const { indexer, engine } = buildFixture();
     await indexer.fullScan("0:1");
 
-    const screen = await engine.getScreen("0:1");
+    const screen = await engine.getScreen("0:1", "file-checkout");
     const raw = JSON.stringify(screen.content);
     expect(raw).not.toContain("rawContext");
     expect(screen.level).toBe(0);

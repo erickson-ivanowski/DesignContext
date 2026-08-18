@@ -46,7 +46,7 @@ describe("US5: reuse previously indexed context across sessions", () => {
     expect(report.changed).toBe(0);
     expect(adapter2.calls.context).toHaveLength(0);
 
-    const screen = await engine2.getScreen("0:1");
+    const screen = await engine2.getScreen("0:1", "file-home");
     expect((screen.content as { screen: string }).screen).toBe("Home");
   });
 });

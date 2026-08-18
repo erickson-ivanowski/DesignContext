@@ -4,6 +4,7 @@ import type {
   ScanReport,
 } from "./types";
 import type { DesignGraph, FigmaAdapter } from "./interfaces";
+import { graphKey } from "./keys";
 import type { DesignCache } from "@designcontext/cache";
 import { nodeCacheKey } from "@designcontext/cache";
 import { contentHash, structuralHash } from "@designcontext/shared";
@@ -106,18 +107,18 @@ export class DesignIndexer {
         item.meta.nodeId,
       )) as Record<string, unknown>;
       const node = this.buildNode(item, raw);
-      const prev = await this.deps.graph.getNode(node.id);
+      const prev = await this.deps.graph.getNode(graphKey(this.deps.fileId, node.id));
       if (!prev) indexed++;
       else if (prev.contentHash === node.contentHash && prev.structuralHash === node.structuralHash) cached++;
       else changed++;
 
       await this.deps.graph.upsert(node);
       await this.deps.cache.set(nodeCacheKey(this.deps.fileId, node.id, node.contentHash), node.irJson);
-      await this.deps.cache.set(`lastModified:${node.id}`, item.meta.lastModified ?? null);
+      await this.deps.cache.set(`lastModified:${this.deps.fileId}:${node.id}`, item.meta.lastModified ?? null);
       nodeMap[node.id] = node;
     }
 
-    await this.deps.cache.saveSnapshot(scopeNodeId, "scan", nodeMap);
+    await this.deps.cache.saveSnapshot(graphKey(this.deps.fileId, scopeNodeId), "scan", nodeMap);
     return {
       discovered: discovered.length,
       cached,
@@ -136,9 +137,9 @@ export class DesignIndexer {
 
     for (const item of discovered) {
       const structural = structuralOf(item.meta, item.order, item.hierarchy);
-      const prev = await this.deps.graph.getNode(item.meta.nodeId);
+      const prev = await this.deps.graph.getNode(graphKey(this.deps.fileId, item.meta.nodeId));
       const prevLastModified = (await this.deps.cache.get(
-        `lastModified:${item.meta.nodeId}`,
+        `lastModified:${this.deps.fileId}:${item.meta.nodeId}`,
       )) as string | null;
       const lastModified = item.meta.lastModified ?? null;
 
@@ -162,11 +163,11 @@ export class DesignIndexer {
 
       await this.deps.graph.upsert(node);
       await this.deps.cache.set(nodeCacheKey(this.deps.fileId, node.id, node.contentHash), node.irJson);
-      await this.deps.cache.set(`lastModified:${node.id}`, lastModified);
+      await this.deps.cache.set(`lastModified:${this.deps.fileId}:${node.id}`, lastModified);
       nodeMap[node.id] = node;
     }
 
-    await this.deps.cache.saveSnapshot(scopeNodeId, "scan", nodeMap);
+    await this.deps.cache.saveSnapshot(graphKey(this.deps.fileId, scopeNodeId), "scan", nodeMap);
     return {
       discovered: discovered.length,
       cached,

@@ -362,39 +362,69 @@
         <h3 style="margin-top:0" data-i18n="en">Connect Figma</h3>
         <h3 style="margin-top:0" data-i18n="es">Conecta Figma</h3>
 
-        <p data-i18n="pt">O DesignContext reaproveita o Figma MCP que você já usa no seu agente — normalmente nenhum token é necessário:</p>
-        <p data-i18n="en">DesignContext reuses the Figma MCP you already use in your agent — usually no token is needed:</p>
-        <p data-i18n="es">DesignContext reutiliza el Figma MCP que ya usas en tu agente — normalmente no se necesita ningún token:</p>
-        <pre><code><span class="prompt">$</span> designcontext connect</code></pre>
+        <p data-i18n="pt">Cole o link do arquivo do Figma (Compartilhar → Copiar link) no <code>--file</code>. O DesignContext extrai o id do arquivo (e o nó, se o link apontar para uma tela específica) sozinho, reaproveita o Figma MCP que você já usa no seu agente — normalmente nenhum token é necessário — e usa o nome real do arquivo no Figma como apelido (alias) padrão:</p>
+        <p data-i18n="en">Paste the Figma file link (Share → Copy link) into <code>--file</code>. DesignContext extracts the file id (and the node, if the link points at a specific screen) on its own, reuses the Figma MCP you already use in your agent — usually no token is needed — and uses the file's real name in Figma as the default alias:</p>
+        <p data-i18n="es">Pega el link del archivo de Figma (Compartir → Copiar link) en <code>--file</code>. DesignContext extrae el id del archivo (y el nodo, si el link apunta a una pantalla específica) solo, reutiliza el Figma MCP que ya usas en tu agente — normalmente no se necesita ningún token — y usa el nombre real del archivo en Figma como alias predeterminado:</p>
+        <pre><code><span class="prompt">$</span> designcontext connect --file "https://www.figma.com/design/aBc123XyZ/Checkout-Flow"</code></pre>
+
+        <p data-i18n="pt">Quer escolher o apelido em vez de usar o nome detectado? Passe <code>--alias</code>:</p>
+        <p data-i18n="en">Want to choose the alias instead of the detected name? Pass <code>--alias</code>:</p>
+        <p data-i18n="es">¿Quieres elegir el alias en vez del nombre detectado? Pasa <code>--alias</code>:</p>
+        <pre><code><span class="prompt">$</span> designcontext connect --file "https://www.figma.com/design/aBc123XyZ/Checkout-Flow" --alias checkout</code></pre>
 
         <p data-i18n="pt">Se preferir, dá para apontar para um Figma MCP hospedado ou usar um token:</p>
         <p data-i18n="en">If you prefer, you can point to a hosted Figma MCP or use a token:</p>
         <p data-i18n="es">Si prefieres, puedes apuntar a un Figma MCP alojado o usar un token:</p>
-        <pre data-i18n="pt"><code><span class="prompt">$</span> designcontext connect --url https://seu-host/mcp
-<span class="prompt">$</span> designcontext connect --file &lt;idDoArquivo&gt; --token &lt;seuToken&gt;</code></pre>
-        <pre data-i18n="en"><code><span class="prompt">$</span> designcontext connect --url https://your-host/mcp
-<span class="prompt">$</span> designcontext connect --file &lt;fileId&gt; --token &lt;yourToken&gt;</code></pre>
-        <pre data-i18n="es"><code><span class="prompt">$</span> designcontext connect --url https://tu-host/mcp
-<span class="prompt">$</span> designcontext connect --file &lt;idDelArchivo&gt; --token &lt;tuToken&gt;</code></pre>
+        <pre data-i18n="pt"><code><span class="prompt">$</span> designcontext connect --file &lt;url&gt; --url https://seu-host/mcp
+<span class="prompt">$</span> designcontext connect --file &lt;url&gt; --token &lt;seuToken&gt;</code></pre>
+        <pre data-i18n="en"><code><span class="prompt">$</span> designcontext connect --file &lt;url&gt; --url https://your-host/mcp
+<span class="prompt">$</span> designcontext connect --file &lt;url&gt; --token &lt;yourToken&gt;</code></pre>
+        <pre data-i18n="es"><code><span class="prompt">$</span> designcontext connect --file &lt;url&gt; --url https://tu-host/mcp
+<span class="prompt">$</span> designcontext connect --file &lt;url&gt; --token &lt;tuToken&gt;</code></pre>
+
+        <p data-i18n="pt">Se nenhum arquivo for informado, ou nenhuma forma de conexão puder ser resolvida, o comando falha com uma mensagem clara em vez de "funcionar" silenciosamente com uma configuração vazia.</p>
+        <p data-i18n="en">If no file is given, or no connection method can be resolved at all, the command fails with a clear message instead of silently "succeeding" with an empty config.</p>
+        <p data-i18n="es">Si no se indica ningún archivo, o no se puede resolver ninguna forma de conexión, el comando falla con un mensaje claro en vez de "funcionar" silenciosamente con una configuración vacía.</p>
       </div>
     </div>
 
     <div class="step">
       <div class="n">3</div>
       <div class="body">
+        <h3 style="margin-top:0" data-i18n="pt">Conectando mais de um arquivo</h3>
+        <h3 style="margin-top:0" data-i18n="en">Connecting more than one file</h3>
+        <h3 style="margin-top:0" data-i18n="es">Conectando más de un archivo</h3>
+
+        <p data-i18n="pt">Um projeto pode acompanhar vários arquivos do Figma ao mesmo tempo. Rode <code>connect</code> de novo com outro link — ele soma o novo arquivo (com seu próprio apelido) em vez de substituir o que você já conectou:</p>
+        <p data-i18n="en">A project can track several Figma files at once. Run <code>connect</code> again with a different link — it adds the new file (under its own alias) instead of replacing the one you already connected:</p>
+        <p data-i18n="es">Un proyecto puede seguir varios archivos de Figma a la vez. Ejecuta <code>connect</code> de nuevo con otro link — suma el nuevo archivo (con su propio alias) en vez de reemplazar el que ya conectaste:</p>
+        <pre><code><span class="prompt">$</span> designcontext connect --file "https://www.figma.com/design/qRs456TuV/Cancelamento" --alias cancelamento</code></pre>
+
+        <p data-i18n="pt">Os dois arquivos passam a compartilhar o mesmo grafo/cache local e o mesmo servidor MCP. Assim que houver mais de um arquivo, os comandos que operam em um arquivo específico (<code>diff</code>, <code>inspect</code>) exigem <code>--file &lt;apelido&gt;</code> para saber qual usar.</p>
+        <p data-i18n="en">Both files now share the same local graph/cache and the same MCP server. As soon as there's more than one file, the commands that operate on a specific file (<code>diff</code>, <code>inspect</code>) require <code>--file &lt;alias&gt;</code> to know which one to use.</p>
+        <p data-i18n="es">Ambos archivos pasan a compartir el mismo grafo/cache local y el mismo servidor MCP. En cuanto haya más de un archivo, los comandos que operan sobre un archivo específico (<code>diff</code>, <code>inspect</code>) requieren <code>--file &lt;alias&gt;</code> para saber cuál usar.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">4</div>
+      <div class="body">
         <h3 style="margin-top:0" data-i18n="pt">Indexe uma tela (scan)</h3>
         <h3 style="margin-top:0" data-i18n="en">Index a screen (scan)</h3>
         <h3 style="margin-top:0" data-i18n="es">Indexa una pantalla (scan)</h3>
 
-        <p data-i18n="pt">Escaneie o arquivo inteiro ou só uma tela específica:</p>
-        <p data-i18n="en">Scan the entire file or just a specific screen:</p>
-        <p data-i18n="es">Escanea el archivo entero o solo una pantalla específica:</p>
-        <pre data-i18n="pt"><code><span class="prompt">$</span> designcontext scan                      # documento inteiro
-<span class="prompt">$</span> designcontext scan --node 123:456        # só uma tela/componente</code></pre>
-        <pre data-i18n="en"><code><span class="prompt">$</span> designcontext scan                      # entire document
-<span class="prompt">$</span> designcontext scan --node 123:456        # a single screen/component</code></pre>
-        <pre data-i18n="es"><code><span class="prompt">$</span> designcontext scan                      # documento entero
-<span class="prompt">$</span> designcontext scan --node 123:456        # solo una pantalla/componente</code></pre>
+        <p data-i18n="pt">Escaneie o arquivo inteiro ou só uma tela específica. Sem <code>--file</code>: se só há um arquivo conectado, ele é escaneado; se há mais de um, todos são escaneados em sequência, com uma linha de relatório por arquivo:</p>
+        <p data-i18n="en">Scan the entire file or just a specific screen. Without <code>--file</code>: if only one file is connected, it's scanned; if there's more than one, all of them are scanned in sequence, with one report line per file:</p>
+        <p data-i18n="es">Escanea el archivo entero o solo una pantalla específica. Sin <code>--file</code>: si solo hay un archivo conectado, se escanea; si hay más de uno, todos se escanean en secuencia, con una línea de reporte por archivo:</p>
+        <pre data-i18n="pt"><code><span class="prompt">$</span> designcontext scan                        # 1 arquivo: escaneia ele. >1: escaneia todos
+<span class="prompt">$</span> designcontext scan --file checkout        # escaneia só o arquivo "checkout"
+<span class="prompt">$</span> designcontext scan --node 123:456          # só uma tela/componente (exige --file com >1 arquivo)</code></pre>
+        <pre data-i18n="en"><code><span class="prompt">$</span> designcontext scan                        # 1 file: scans it. >1: scans all of them
+<span class="prompt">$</span> designcontext scan --file checkout        # scan only the "checkout" file
+<span class="prompt">$</span> designcontext scan --node 123:456          # a single screen/component (requires --file with >1 file)</code></pre>
+        <pre data-i18n="es"><code><span class="prompt">$</span> designcontext scan                        # 1 archivo: lo escanea. >1: escanea todos
+<span class="prompt">$</span> designcontext scan --file checkout        # escanea solo el archivo "checkout"
+<span class="prompt">$</span> designcontext scan --node 123:456          # solo una pantalla/componente (exige --file con >1 archivo)</code></pre>
 
         <p data-i18n="pt">
           Aqui o DesignContext abre o Figma MCP, lê o design e guarda a versão organizada
@@ -412,7 +442,7 @@
     </div>
 
     <div class="step">
-      <div class="n">4</div>
+      <div class="n">5</div>
       <div class="body">
         <h3 style="margin-top:0" data-i18n="pt">Registre no seu agente de IA</h3>
         <h3 style="margin-top:0" data-i18n="en">Register with your AI agent</h3>
@@ -453,12 +483,12 @@
       <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
       <tbody>
         <tr><td><code>init [nome]</code></td><td>Cria a pasta <code>.designcontext/</code> com a configuração do projeto.</td></tr>
-        <tr><td><code>connect</code></td><td>Configura a conexão com o Figma e guarda as credenciais no cofre do sistema.</td></tr>
-        <tr><td><code>scan</code></td><td>Indexa o escopo do projeto. Aceita <code>--node &lt;id&gt;</code> e <code>--incremental</code>.</td></tr>
-        <tr><td><code>status</code></td><td>Mostra telas, componentes e tokens indexados, além do tamanho do cache.</td></tr>
-        <tr><td><code>diff [tela]</code></td><td>Mostra só o que mudou desde o último scan.</td></tr>
-        <tr><td><code>inspect</code></td><td>Imprime o contexto de um nó em um nível (0 = resumo … 4 = bruto).</td></tr>
-        <tr><td><code>clear-cache</code></td><td>Limpa o cache local (mantém a configuração do projeto).</td></tr>
+        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Conecta um arquivo do Figma — <code>--file</code> aceita um link colado do Figma ou um id de arquivo. Detecta o nome real do arquivo como apelido padrão (ou use <code>--alias</code>). Rode de novo com outro link para conectar mais arquivos. Aceita <code>--token</code> e <code>--url</code>.</td></tr>
+        <tr><td><code>scan</code></td><td>Indexa o escopo. Sem <code>--file</code>: escaneia todos os arquivos configurados. Aceita <code>--file &lt;apelido&gt;</code>, <code>--node &lt;id&gt;</code> e <code>--incremental</code>.</td></tr>
+        <tr><td><code>status</code></td><td>Mostra telas, componentes e tokens indexados (total e por arquivo), além do tamanho do cache. Não tem <code>--file</code> — sempre relata todos os arquivos.</td></tr>
+        <tr><td><code>diff [tela]</code></td><td>Mostra só o que mudou desde o último scan. Exige <code>--file &lt;apelido&gt;</code> quando há mais de um arquivo conectado.</td></tr>
+        <tr><td><code>inspect</code></td><td>Imprime o contexto de um nó em um nível (0 = resumo … 4 = bruto). Exige <code>--file &lt;apelido&gt;</code> quando há mais de um arquivo conectado.</td></tr>
+        <tr><td><code>clear-cache</code></td><td>Limpa o cache local (mantém a configuração do projeto). <code>--file &lt;apelido&gt;</code> é opcional — sem ele, limpa tudo.</td></tr>
         <tr><td><code>setup</code></td><td>Registra o servidor MCP no seu agente de IA. Aceita <code>--agent &lt;ids&gt;</code> pra pular a pergunta.</td></tr>
       </tbody>
     </table>
@@ -466,12 +496,12 @@
       <thead><tr><th>Command</th><th>What it does</th></tr></thead>
       <tbody>
         <tr><td><code>init [name]</code></td><td>Creates the <code>.designcontext/</code> folder with the project's configuration.</td></tr>
-        <tr><td><code>connect</code></td><td>Configures the Figma connection and stores credentials in the system vault.</td></tr>
-        <tr><td><code>scan</code></td><td>Indexes the project scope. Accepts <code>--node &lt;id&gt;</code> and <code>--incremental</code>.</td></tr>
-        <tr><td><code>status</code></td><td>Shows indexed screens, components, and tokens, plus cache size.</td></tr>
-        <tr><td><code>diff [screen]</code></td><td>Shows only what changed since the last scan.</td></tr>
-        <tr><td><code>inspect</code></td><td>Prints a node's context at a level (0 = summary … 4 = raw).</td></tr>
-        <tr><td><code>clear-cache</code></td><td>Clears the local cache (keeps the project configuration).</td></tr>
+        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Connects a Figma file — <code>--file</code> accepts a pasted Figma link or a bare file id. Detects the file's real name as the default alias (or pass <code>--alias</code>). Run again with a different link to connect additional files. Accepts <code>--token</code> and <code>--url</code>.</td></tr>
+        <tr><td><code>scan</code></td><td>Indexes the scope. Without <code>--file</code>: scans every configured file. Accepts <code>--file &lt;alias&gt;</code>, <code>--node &lt;id&gt;</code>, and <code>--incremental</code>.</td></tr>
+        <tr><td><code>status</code></td><td>Shows indexed screens, components, and tokens (aggregate and per file), plus cache size. No <code>--file</code> flag — always reports every file.</td></tr>
+        <tr><td><code>diff [screen]</code></td><td>Shows only what changed since the last scan. Requires <code>--file &lt;alias&gt;</code> once more than one file is connected.</td></tr>
+        <tr><td><code>inspect</code></td><td>Prints a node's context at a level (0 = summary … 4 = raw). Requires <code>--file &lt;alias&gt;</code> once more than one file is connected.</td></tr>
+        <tr><td><code>clear-cache</code></td><td>Clears the local cache (keeps the project configuration). <code>--file &lt;alias&gt;</code> is optional — omit it to clear everything.</td></tr>
         <tr><td><code>setup</code></td><td>Registers the MCP server with your AI agent. Accepts <code>--agent &lt;ids&gt;</code> to skip the prompt.</td></tr>
       </tbody>
     </table>
@@ -479,12 +509,12 @@
       <thead><tr><th>Comando</th><th>Qué hace</th></tr></thead>
       <tbody>
         <tr><td><code>init [nombre]</code></td><td>Crea la carpeta <code>.designcontext/</code> con la configuración del proyecto.</td></tr>
-        <tr><td><code>connect</code></td><td>Configura la conexión con Figma y guarda las credenciales en el almacén del sistema.</td></tr>
-        <tr><td><code>scan</code></td><td>Indexa el alcance del proyecto. Acepta <code>--node &lt;id&gt;</code> y <code>--incremental</code>.</td></tr>
-        <tr><td><code>status</code></td><td>Muestra pantallas, componentes y tokens indexados, además del tamaño del cache.</td></tr>
-        <tr><td><code>diff [pantalla]</code></td><td>Muestra solo lo que cambió desde el último scan.</td></tr>
-        <tr><td><code>inspect</code></td><td>Imprime el contexto de un nodo en un nivel (0 = resumen … 4 = bruto).</td></tr>
-        <tr><td><code>clear-cache</code></td><td>Limpia el cache local (mantiene la configuración del proyecto).</td></tr>
+        <tr><td><code>connect --file &lt;url&gt;</code></td><td>Conecta un archivo de Figma — <code>--file</code> acepta un link pegado de Figma o un id de archivo. Detecta el nombre real del archivo como alias predeterminado (o usa <code>--alias</code>). Ejecuta de nuevo con otro link para conectar más archivos. Acepta <code>--token</code> y <code>--url</code>.</td></tr>
+        <tr><td><code>scan</code></td><td>Indexa el alcance. Sin <code>--file</code>: escanea todos los archivos configurados. Acepta <code>--file &lt;alias&gt;</code>, <code>--node &lt;id&gt;</code> y <code>--incremental</code>.</td></tr>
+        <tr><td><code>status</code></td><td>Muestra pantallas, componentes y tokens indexados (total y por archivo), además del tamaño del cache. No tiene <code>--file</code> — siempre reporta todos los archivos.</td></tr>
+        <tr><td><code>diff [pantalla]</code></td><td>Muestra solo lo que cambió desde el último scan. Requiere <code>--file &lt;alias&gt;</code> cuando hay más de un archivo conectado.</td></tr>
+        <tr><td><code>inspect</code></td><td>Imprime el contexto de un nodo en un nivel (0 = resumen … 4 = bruto). Requiere <code>--file &lt;alias&gt;</code> cuando hay más de un archivo conectado.</td></tr>
+        <tr><td><code>clear-cache</code></td><td>Limpia el cache local (mantiene la configuración del proyecto). <code>--file &lt;alias&gt;</code> es opcional — sin él, limpia todo.</td></tr>
         <tr><td><code>setup</code></td><td>Registra el servidor MCP en tu agente de IA. Acepta <code>--agent &lt;ids&gt;</code> para saltar la pregunta.</td></tr>
       </tbody>
     </table>
@@ -534,39 +564,46 @@
     <table data-i18n="pt">
       <thead><tr><th>Ferramenta</th><th>O que entrega</th></tr></thead>
       <tbody>
+        <tr><td><code>design_list_files</code></td><td>Lista os arquivos do Figma conectados ao projeto (apelido, id, telas, componentes) — chame primeiro se não souber qual apelido usar.</td></tr>
         <tr><td><code>design_get_screen</code></td><td>Resumo de uma tela (seções, componentes, layout, filhos disponíveis).</td></tr>
         <tr><td><code>design_get_structure</code></td><td>A árvore de um nó até a profundidade pedida.</td></tr>
         <tr><td><code>design_get_component</code></td><td>Detalhe completo de um componente (estrutura, propriedades, tokens, mapeamento de código).</td></tr>
         <tr><td><code>design_get_tokens</code></td><td>Tokens de estilo (cores, espaçamentos, tipografia) de um escopo.</td></tr>
         <tr><td><code>design_get_changes</code></td><td>Só o que mudou desde a última versão.</td></tr>
-        <tr><td><code>design_find</code></td><td>Busca por nome de tela ou componente.</td></tr>
+        <tr><td><code>design_find</code></td><td>Busca por nome de tela ou componente. Sem <code>file</code>, busca em todos os arquivos conectados.</td></tr>
         <tr><td><code>design_inspect</code></td><td>Aprofunda o contexto de um nó, nível a nível.</td></tr>
       </tbody>
     </table>
     <table data-i18n="en">
       <thead><tr><th>Tool</th><th>What it returns</th></tr></thead>
       <tbody>
+        <tr><td><code>design_list_files</code></td><td>Lists the Figma files connected to the project (alias, id, screens, components) — call this first if unsure which alias to use.</td></tr>
         <tr><td><code>design_get_screen</code></td><td>Screen summary (sections, components, layout, available children).</td></tr>
         <tr><td><code>design_get_structure</code></td><td>A node's tree down to the requested depth.</td></tr>
         <tr><td><code>design_get_component</code></td><td>Full component detail (structure, properties, tokens, code mapping).</td></tr>
         <tr><td><code>design_get_tokens</code></td><td>Style tokens (colors, spacing, typography) for a scope.</td></tr>
         <tr><td><code>design_get_changes</code></td><td>Only what changed since the last version.</td></tr>
-        <tr><td><code>design_find</code></td><td>Search by screen or component name.</td></tr>
+        <tr><td><code>design_find</code></td><td>Search by screen or component name. Without <code>file</code>, searches every connected file.</td></tr>
         <tr><td><code>design_inspect</code></td><td>Drills into a node's context, level by level.</td></tr>
       </tbody>
     </table>
     <table data-i18n="es">
       <thead><tr><th>Herramienta</th><th>Qué entrega</th></tr></thead>
       <tbody>
+        <tr><td><code>design_list_files</code></td><td>Lista los archivos de Figma conectados al proyecto (alias, id, pantallas, componentes) — llama primero si no sabes qué alias usar.</td></tr>
         <tr><td><code>design_get_screen</code></td><td>Resumen de una pantalla (secciones, componentes, layout, hijos disponibles).</td></tr>
         <tr><td><code>design_get_structure</code></td><td>El árbol de un nodo hasta la profundidad pedida.</td></tr>
         <tr><td><code>design_get_component</code></td><td>Detalle completo de un componente (estructura, propiedades, tokens, mapeo de código).</td></tr>
         <tr><td><code>design_get_tokens</code></td><td>Tokens de estilo (colores, espaciados, tipografía) de un alcance.</td></tr>
         <tr><td><code>design_get_changes</code></td><td>Solo lo que cambió desde la última versión.</td></tr>
-        <tr><td><code>design_find</code></td><td>Búsqueda por nombre de pantalla o componente.</td></tr>
+        <tr><td><code>design_find</code></td><td>Búsqueda por nombre de pantalla o componente. Sin <code>file</code>, busca en todos los archivos conectados.</td></tr>
         <tr><td><code>design_inspect</code></td><td>Profundiza en el contexto de un nodo, nivel a nivel.</td></tr>
       </tbody>
     </table>
+
+    <p data-i18n="pt">Assim que o projeto tiver mais de um arquivo conectado, todas as ferramentas acima (exceto <code>design_list_files</code>) passam a aceitar um parâmetro <code>file</code> (apelido ou id do arquivo) para escolher qual consultar — e ele se torna <strong>obrigatório</strong> nesse ponto.</p>
+    <p data-i18n="en">Once the project has more than one connected file, every tool above (except <code>design_list_files</code>) accepts an optional <code>file</code> parameter (alias or file id) to pick which one to query — and it becomes <strong>required</strong> at that point.</p>
+    <p data-i18n="es">En cuanto el proyecto tenga más de un archivo conectado, todas las herramientas de arriba (excepto <code>design_list_files</code>) aceptan un parámetro <code>file</code> (alias o id del archivo) para elegir cuál consultar — y se vuelve <strong>obligatorio</strong> en ese punto.</p>
 
     <div class="callout">
       <b data-i18n="pt">Como isso aparece no dia a dia</b>
@@ -603,9 +640,18 @@
 
       <h3>O que preciso para conectar ao Figma?</h3>
       <p>
-        Na maioria dos casos, nada além de rodar <code>designcontext connect</code>: ele detecta o
-        Figma MCP que você já tem configurado no seu agente e reaproveita. Se não houver, dá para
-        apontar para um Figma MCP hospedado (<code>--url</code>) ou usar um token do Figma.
+        Cole o link do arquivo do Figma: <code>designcontext connect --file &lt;link&gt;</code>. Na
+        maioria dos casos, nada além disso: ele detecta o Figma MCP que você já tem configurado
+        no seu agente e reaproveita. Se não houver, dá para apontar para um Figma MCP hospedado
+        (<code>--url</code>) ou usar um token do Figma.
+      </p>
+
+      <h3>Posso conectar mais de um arquivo do Figma no mesmo projeto?</h3>
+      <p>
+        Sim. Rode <code>designcontext connect --file &lt;outro-link&gt;</code> de novo — o novo
+        arquivo é somado (com seu próprio apelido) em vez de substituir o anterior. Todos os
+        arquivos ficam disponíveis no mesmo cache local e no mesmo servidor MCP; use
+        <code>--file &lt;apelido&gt;</code> nos comandos que exigem escolher um.
       </p>
 
       <h3>Onde ficam as credenciais do Figma?</h3>
@@ -627,9 +673,18 @@
 
       <h3>What do I need to connect to Figma?</h3>
       <p>
-        In most cases, nothing beyond running <code>designcontext connect</code>: it detects the
-        Figma MCP already configured in your agent and reuses it. If there isn't one, you can
-        point to a hosted Figma MCP (<code>--url</code>) or use a Figma token.
+        Paste the Figma file link: <code>designcontext connect --file &lt;link&gt;</code>. In most
+        cases, nothing beyond that: it detects the Figma MCP already configured in your agent and
+        reuses it. If there isn't one, you can point to a hosted Figma MCP (<code>--url</code>) or
+        use a Figma token.
+      </p>
+
+      <h3>Can I connect more than one Figma file to the same project?</h3>
+      <p>
+        Yes. Run <code>designcontext connect --file &lt;another-link&gt;</code> again — the new
+        file is added (under its own alias) instead of replacing the previous one. All files are
+        available through the same local cache and the same MCP server; use
+        <code>--file &lt;alias&gt;</code> on commands that require choosing one.
       </p>
 
       <h3>Where are Figma credentials stored?</h3>
@@ -651,9 +706,18 @@
 
       <h3>¿Qué necesito para conectar con Figma?</h3>
       <p>
-        En la mayoría de los casos, nada más que ejecutar <code>designcontext connect</code>: detecta el
-        Figma MCP que ya tienes configurado en tu agente y lo reutiliza. Si no hay uno, puedes
-        apuntar a un Figma MCP alojado (<code>--url</code>) o usar un token de Figma.
+        Pega el link del archivo de Figma: <code>designcontext connect --file &lt;link&gt;</code>.
+        En la mayoría de los casos, nada más que eso: detecta el Figma MCP que ya tienes
+        configurado en tu agente y lo reutiliza. Si no hay uno, puedes apuntar a un Figma MCP
+        alojado (<code>--url</code>) o usar un token de Figma.
+      </p>
+
+      <h3>¿Puedo conectar más de un archivo de Figma al mismo proyecto?</h3>
+      <p>
+        Sí. Ejecuta <code>designcontext connect --file &lt;otro-link&gt;</code> de nuevo — el
+        nuevo archivo se suma (con su propio alias) en vez de reemplazar el anterior. Todos los
+        archivos quedan disponibles en el mismo cache local y el mismo servidor MCP; usa
+        <code>--file &lt;alias&gt;</code> en los comandos que requieren elegir uno.
       </p>
 
       <h3>¿Dónde quedan las credenciales de Figma?</h3>

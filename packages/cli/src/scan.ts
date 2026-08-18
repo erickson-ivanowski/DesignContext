@@ -1,5 +1,6 @@
+import type { ScanReport } from "@designcontext/core";
 import { createLogger } from "@designcontext/shared";
-import type { AppContext } from "./runtime";
+import type { FileRuntime } from "./runtime";
 import { writeAgentConfig } from "./agent-config";
 
 const logger = createLogger("designcontext:scan");
@@ -11,20 +12,21 @@ export interface ScanOptions {
 }
 
 /**
- * Index a scope. First run = full scan; later runs = incremental (only changed
- * nodes). Reports discovered/cached/changed counts and emits the agent config.
+ * Index one file's scope. First run = full scan; later runs = incremental
+ * (only changed nodes). Reports discovered/cached/changed counts.
  */
-export async function scan(
-  ctx: AppContext,
+export async function scanFile(
+  file: FileRuntime,
   scopeNodeId: string,
-  opts: ScanOptions = {},
-): Promise<void> {
+  opts: Pick<ScanOptions, "incremental"> = {},
+): Promise<ScanReport> {
   const report = opts.incremental
-    ? await ctx.indexer.incrementalScan(scopeNodeId)
-    : await ctx.indexer.fullScan(scopeNodeId);
+    ? await file.indexer.incrementalScan(scopeNodeId)
+    : await file.indexer.fullScan(scopeNodeId);
 
   logger.info(
     {
+      alias: file.alias,
       discovered: report.discovered,
       cached: report.cached,
       changed: report.changed,
@@ -34,19 +36,19 @@ export async function scan(
     "scan complete",
   );
 
-  // Human-readable report to stdout.
   const mode = report.fullScan ? "full" : "incremental";
   process.stdout.write(
-    `Scan (${mode}): ${report.discovered} discovered, ${report.indexed} indexed, ` +
+    `[${file.alias}] Scan (${mode}): ${report.discovered} discovered, ${report.indexed} indexed, ` +
       `${report.changed} changed, ${report.cached} cached\n`,
   );
 
-  if (opts.configDir) {
-    const fs = await import("node:fs");
-    const path = await import("node:path");
-    const dest = path.join(opts.configDir, "mcp.json");
-    writeAgentConfig(dest);
-    void fs;
-    process.stdout.write(`Agent MCP config written to ${dest}\n`);
-  }
+  return report;
+}
+
+export async function maybeWriteAgentConfig(configDir?: string): Promise<void> {
+  if (!configDir) return;
+  const path = await import("node:path");
+  const dest = path.join(configDir, "mcp.json");
+  writeAgentConfig(dest);
+  process.stdout.write(`Agent MCP config written to ${dest}\n`);
 }

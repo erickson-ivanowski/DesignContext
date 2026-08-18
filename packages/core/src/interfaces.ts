@@ -20,25 +20,30 @@ export interface CacheStore {
   get(key: string): Promise<unknown | null>;
   set(key: string, value: unknown): Promise<void>;
   invalidate(key: string): Promise<void>;
-  clear(): Promise<void>;
+  clear(fileId?: string): Promise<void>;
 }
 
-/** In-memory + persisted node graph; implemented by design-graph. */
+/**
+ * In-memory + persisted node graph; implemented by design-graph. Node ids
+ * passed to `getNode`/`getChildren`/`upsert` are composite `graphKey(fileId, nodeId)`
+ * strings — bare Figma node ids are only unique within one file.
+ */
 export interface DesignGraph {
-  getNode(id: string): Promise<DesignNode | null>;
-  getChildren(id: string): Promise<DesignNode[]>;
+  getNode(compositeId: string): Promise<DesignNode | null>;
+  getChildren(compositeId: string): Promise<DesignNode[]>;
   upsert(node: DesignNode): Promise<void>;
-  all(): Promise<DesignNode[]>;
-  search(query: string): Promise<DesignNode[]>;
-  clear(): Promise<void>;
+  all(fileId?: string): Promise<DesignNode[]>;
+  search(query: string, fileId?: string): Promise<DesignNode[]>;
+  clear(fileId?: string): Promise<void>;
+  listFileIds(): Promise<string[]>;
 }
 
 /** Minimum-sufficient context assembly; implemented by context-engine. */
 export interface ContextEngine {
-  getScreen(id: string): Promise<ContextResult>;
-  getComponent(id: string): Promise<ContextResult>;
-  getChanges(id: string): Promise<DiffResult>;
-  getTokens(scope?: string): Promise<ContextResult>;
+  getScreen(id: string, fileId?: string): Promise<ContextResult>;
+  getComponent(id: string, fileId?: string): Promise<ContextResult>;
+  getChanges(id: string, fileId?: string): Promise<DiffResult>;
+  getTokens(scope?: string, fileId?: string): Promise<ContextResult>;
 }
 
 /**

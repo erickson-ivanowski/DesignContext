@@ -90,18 +90,27 @@ export interface ContextResult {
   references?: string[];
 }
 
-export interface ProjectConfig {
-  name: string;
-  figmaFileId: string | null;
+/** One Figma file tracked by a project. A project may track several. */
+export interface FigmaFileConfig {
+  fileId: string;
+  /** Short handle used to refer to this file in the CLI and MCP tools — unique per project. */
+  alias: string;
   rootNodes: string[];
-  framework: string;
-  language: string;
-  sourceDirectory: string;
-  componentDirectory: string;
   figmaMcpCommand?: string;
   figmaMcpArgs?: string[];
   figmaMcpEnv?: Record<string, string>;
   figmaMcpUrl?: string;
+  addedAt: string;
+}
+
+export interface ProjectConfig {
+  name: string;
+  figmaFiles: FigmaFileConfig[];
+  framework: string;
+  language: string;
+  sourceDirectory: string;
+  componentDirectory: string;
+  configVersion: 2;
 }
 
 export interface ScanReport {
@@ -110,6 +119,16 @@ export interface ScanReport {
   changed: number;
   indexed: number;
   fullScan: boolean;
+}
+
+export interface FileStatusReport {
+  alias: string;
+  fileId: string;
+  screens: number;
+  components: number;
+  tokens: number;
+  lastScanAt: string | null;
+  cachedNodes: number;
 }
 
 export interface StatusReport {
@@ -121,6 +140,7 @@ export interface StatusReport {
   lastScanAt: string | null;
   cachedNodes: number;
   changedNodes: number;
+  files: FileStatusReport[];
 }
 
 export interface Metrics {

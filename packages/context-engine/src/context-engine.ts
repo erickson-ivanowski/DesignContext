@@ -6,6 +6,7 @@ import type {
   DiffResult,
 } from "@designcontext/core";
 import type { DesignGraph } from "@designcontext/core";
+import { graphKey } from "@designcontext/core";
 import type { DesignCache } from "@designcontext/cache";
 import { estimateTokens } from "@designcontext/shared";
 import { optimize } from "./optimizer";
@@ -58,17 +59,19 @@ export class ContextEngineImpl implements ContextEngine {
     private readonly cache: DesignCache,
   ) {}
 
-  private async resolveNode(idOrName: string): Promise<DesignNode> {
-    const byId = await this.graph.getNode(idOrName);
-    if (byId) return byId;
-    const matches = await this.graph.search(idOrName);
+  private async resolveNode(idOrName: string, fileId?: string): Promise<DesignNode> {
+    if (fileId) {
+      const byId = await this.graph.getNode(graphKey(fileId, idOrName));
+      if (byId) return byId;
+    }
+    const matches = await this.graph.search(idOrName, fileId);
     if (matches.length > 0) return matches[0];
     throw new Error(`No node found for "${idOrName}"`);
   }
 
-  async getScreen(screenId: string): Promise<ContextResult> {
-    const root = await this.resolveNode(screenId);
-    const all = await this.graph.all();
+  async getScreen(screenId: string, fileId?: string): Promise<ContextResult> {
+    const root = await this.resolveNode(screenId, fileId);
+    const all = await this.graph.all(root.fileId);
     const nodes = new Map(all.map((n) => [n.id, n]));
     const descendants = collectDescendants(root, nodes);
     const childNames = root.children
@@ -95,9 +98,9 @@ export class ContextEngineImpl implements ContextEngine {
     };
   }
 
-  async getComponent(componentId: string): Promise<ContextResult> {
-    const component = await this.resolveNode(componentId);
-    const all = await this.graph.all();
+  async getComponent(componentId: string, fileId?: string): Promise<ContextResult> {
+    const component = await this.resolveNode(componentId, fileId);
+    const all = await this.graph.all(component.fileId);
     const assembled: ComponentContext = assembleComponent(component, all);
     const optimized = optimize(assembled);
     return {
@@ -109,13 +112,15 @@ export class ContextEngineImpl implements ContextEngine {
     };
   }
 
-  async getTokens(scope?: string): Promise<ContextResult> {
-    const all = await this.graph.all();
-    let nodes = all;
+  async getTokens(scope?: string, fileId?: string): Promise<ContextResult> {
+    let nodes: DesignNode[];
     if (scope) {
-      const root = await this.resolveNode(scope);
+      const root = await this.resolveNode(scope, fileId);
+      const all = await this.graph.all(root.fileId);
       const nodeMap = new Map(all.map((n) => [n.id, n]));
       nodes = collectDescendants(root, nodeMap);
+    } else {
+      nodes = await this.graph.all(fileId);
     }
     const tokens = extractScopeTokens(nodes);
     return {
@@ -126,13 +131,27 @@ export class ContextEngineImpl implements ContextEngine {
     };
   }
 
-  async getChanges(scopeId: string): Promise<DiffResult> {
-    return assembleChanges(this.graph, this.cache, scopeId);
+  async getChanges(scopeId: string, fileId?: string): Promise<DiffResult> {
+    let resolvedFileId = fileId;
+    if (!resolvedFileId) {
+      const matches = await this.graph.search(scopeId, undefined);
+      if (matches.length === 0) {
+        throw new Error(`No node found for "${scopeId}"`);
+      }
+      const distinctFileIds = new Set(matches.map((n) => n.fileId));
+      if (distinctFileIds.size > 1) {
+        throw new Error(
+          `"${scopeId}" matches nodes in multiple files (${Array.from(distinctFileIds).join(", ")}); pass fileId to disambiguate`,
+        );
+      }
+      resolvedFileId = matches[0].fileId;
+    }
+    return assembleChanges(this.graph, this.cache, scopeId, resolvedFileId);
   }
 
-  async getContext(nodeId: string, level: ContextLevel): Promise<ContextResult> {
-    const node = await this.resolveNode(nodeId);
-    const all = await this.graph.all();
+  async getContext(nodeId: string, level: ContextLevel, fileId?: string): Promise<ContextResult> {
+    const node = await this.resolveNode(nodeId, fileId);
+    const all = await this.graph.all(node.fileId);
     const nodes = new Map(all.map((n) => [n.id, n]));
 
     let content: unknown;

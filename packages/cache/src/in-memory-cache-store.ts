@@ -1,4 +1,5 @@
 import type { DesignNode } from "@designcontext/core";
+import { graphKey } from "@designcontext/core";
 import type { DesignCache, Snapshot } from "./types";
 
 /** In-memory DesignCache. Used by tests and the CLI's `--in-memory` mode. */
@@ -19,34 +20,44 @@ export class InMemoryCacheStore implements DesignCache {
     this.blobs.delete(key);
   }
 
-  async clear(): Promise<void> {
+  async clear(fileId?: string): Promise<void> {
+    if (fileId) {
+      for (const [key, node] of this.nodes) {
+        if (node.fileId === fileId) this.nodes.delete(key);
+      }
+      for (const key of this.snapshots.keys()) {
+        if (key.startsWith(`${fileId}:`)) this.snapshots.delete(key);
+      }
+      return;
+    }
     this.blobs.clear();
     this.nodes.clear();
     this.snapshots.clear();
   }
 
-  async listNodes(): Promise<DesignNode[]> {
-    return Array.from(this.nodes.values());
+  async listNodes(fileId?: string): Promise<DesignNode[]> {
+    const all = Array.from(this.nodes.values());
+    return fileId ? all.filter((n) => n.fileId === fileId) : all;
   }
 
   async upsertNode(node: DesignNode): Promise<void> {
-    this.nodes.set(node.id, node);
+    this.nodes.set(graphKey(node.fileId, node.id), node);
   }
 
   async saveSnapshot(
-    scopeId: string,
+    scopeKey: string,
     kind: string,
     data: Record<string, DesignNode>,
   ): Promise<void> {
-    this.snapshots.set(scopeId, {
-      scopeId,
+    this.snapshots.set(scopeKey, {
+      scopeId: scopeKey,
       kind,
       data,
       createdAt: new Date().toISOString(),
     });
   }
 
-  async getLatestSnapshot(scopeId: string): Promise<Snapshot | null> {
-    return this.snapshots.get(scopeId) ?? null;
+  async getLatestSnapshot(scopeKey: string): Promise<Snapshot | null> {
+    return this.snapshots.get(scopeKey) ?? null;
   }
 }

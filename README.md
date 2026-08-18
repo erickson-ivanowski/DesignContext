@@ -38,8 +38,11 @@ Primary metric: **≥ 70% token reduction** vs. raw design context.
 - **Incremental scan** — content + structural hashing; re-index only what changed.
 - **Diff** — `design_get_changes` reports exactly what changed since the previous version.
 - **Local & private** — SQLite + content-addressable cache under `~/.designcontext/`; no telemetry.
-- **MCP server** — `design_get_screen`, `design_get_structure`, `design_get_component`,
-  `design_get_tokens`, `design_get_changes`, `design_find`, `design_inspect`.
+- **Multi-file** — track several Figma files in one project, each under its own alias, all
+  queryable through one shared graph/cache and one MCP server.
+- **MCP server** — `design_get_project`, `design_list_files`, `design_get_screen`,
+  `design_get_structure`, `design_get_component`, `design_get_tokens`, `design_get_changes`,
+  `design_find`, `design_inspect`.
 
 ## How it works
 
@@ -86,32 +89,63 @@ This creates a `.designcontext/` folder with the project's configuration.
 
 ### Connect to Figma
 
+Paste a Figma URL (Share → Copy link) — `connect` parses the file key (and node id, if the link
+points at a specific frame) straight out of it:
+
 ```bash
-designcontext connect
+designcontext connect --file "https://www.figma.com/design/aBc123XyZ/Checkout-Flow?node-id=155-1282"
 ```
 
 `connect` prefers an **existing Figma MCP** — it auto-detects one already configured in your
 agent (from `.mcp.json` or `~/.claude.json`) and reuses it, so in most cases no token is needed.
-
-If you don't have one configured, or want to point somewhere specific:
+Since you didn't pass `--alias`, it makes one fresh call to fetch the Figma file's real name
+("Checkout Flow") and slugifies it into the default alias (`checkout-flow`); pass `--alias` to
+choose your own instead:
 
 ```bash
-designcontext connect --url https://host/mcp          # a hosted Figma MCP
-designcontext connect --file <fileId> --token <key>   # fallback: spawn figma-developer-mcp with a token
+designcontext connect --file "https://www.figma.com/design/aBc123XyZ/Checkout-Flow" --alias checkout
+```
+
+If you don't have a Figma MCP configured, or want to point somewhere specific:
+
+```bash
+designcontext connect --file <url> --url https://host/mcp     # a hosted Figma MCP
+designcontext connect --file <url> --token <key>              # fallback: spawn figma-developer-mcp with a token
 ```
 
 Figma credentials are stored in the OS secure vault (Keychain on macOS, Credential Manager on
 Windows) — never in project files.
 
+If no `--file` is given, or no connection method can be resolved at all (no existing Figma MCP,
+no `--url`, no `--token`), `connect` fails loudly instead of silently succeeding with an empty
+config:
+
+```
+No Figma file given. Paste a Figma URL: designcontext connect --file <url> [--token <token>]
+```
+
+#### Connecting more than one file
+
+A project can track multiple Figma files. Run `connect` again with a different URL — it appends
+the new file (under its own alias) instead of replacing the one you already connected:
+
+```bash
+designcontext connect --file "https://www.figma.com/design/qRs456TuV/Cancelamento" --alias cancelamento
+```
+
+Both files now share the same local graph/cache and the same MCP server; every other command
+that touches a specific file takes `--file <alias>` to pick between them.
+
 ### Index a screen
 
 ```bash
-designcontext scan                    # index the document root
-designcontext scan --node 123:456     # index a specific frame/component
-designcontext status                  # see what got indexed
+designcontext scan                    # 1 file configured: scans it. >1 file: scans ALL of them, one report line each
+designcontext scan --file checkout    # scan only the "checkout" file
+designcontext scan --node 123:456     # index a specific frame/component (requires --file once >1 file is connected)
+designcontext status                  # see what got indexed, aggregate + per-file breakdown
 ```
 
-The first scan is a full scan; after that, `scan` only re-indexes what changed.
+The first scan of a file is a full scan; after that, `scan` only re-indexes what changed.
 
 ### Register with your AI agent
 
@@ -129,12 +163,12 @@ configure it by hand instead.
 | Command | Description |
 | --- | --- |
 | `designcontext init [name]` | Create `.designcontext/` project config. |
-| `designcontext connect` | Configure the Figma connection (`--url`, `--file`, `--token`; auto-reuses an existing Figma MCP). |
-| `designcontext scan` | Index the scope (`--node <id>`, `--incremental`). |
-| `designcontext status` | Show indexed screens/components/tokens and cache size. |
-| `designcontext diff [screen]` | Show only what changed since the last scan. |
-| `designcontext inspect --node <id> [--level 0-4]` | Print a node's context at a level. |
-| `designcontext clear-cache` | Clear the local cache (keeps project config). |
+| `designcontext connect --file <url> [--alias <name>] [--token <token>] [--url <url>]` | Connect a Figma file — `--file` accepts a pasted Figma URL or a bare file key. Auto-reuses an existing Figma MCP; auto-fetches the file's name as the default alias when `--alias` is omitted. Run again with a different `--file` to connect an additional file to the same project. Throws a clear error instead of silently succeeding when no file or connection method is given. |
+| `designcontext scan [--file <alias>]` | Index one file's scope, or every configured file (sequentially, one report line each) when `--file` is omitted. Accepts `--node <id>` (requires `--file` once the project tracks more than one file) and `--incremental`. |
+| `designcontext status` | Show aggregate + per-file screens/components/tokens/cache breakdown. No `--file` flag — always reports on every connected file. |
+| `designcontext diff [screen] --file <alias>` | Show only what changed since the last scan for one file. `--file` is required once the project tracks more than one file (errors listing the known aliases otherwise). |
+| `designcontext inspect --node <id> [--level 0-4] --file <alias>` | Print a node's context at a level. `--file` is required once the project tracks more than one file. |
+| `designcontext clear-cache [--file <alias>]` | Clear the local cache. `--file` is optional — omit it to clear everything. |
 | `designcontext setup` | Register the MCP server with an agent (`--agent <ids>` to skip the prompt). |
 
 ## Agent integration
@@ -153,9 +187,17 @@ above); to configure it by hand, add this to your agent's MCP config:
 }
 ```
 
-This gives the agent tools to query the design directly: `design_get_screen`,
-`design_get_structure`, `design_get_component`, `design_get_tokens`, `design_get_changes`,
-`design_find`, `design_inspect`.
+This gives the agent tools to query the design directly: `design_get_project`,
+`design_list_files`, `design_get_screen`, `design_get_structure`, `design_get_component`,
+`design_get_tokens`, `design_get_changes`, `design_find`, `design_inspect`.
+
+Once a project tracks more than one Figma file, every tool except `design_get_project` accepts
+an optional `file` input (an alias or raw file id) to pick which file to query, and it becomes
+**required** as soon as more than one file is connected. `design_list_files` takes no input and
+returns each connected file's alias, file id, screen count, and component count — call it first
+when the agent isn't sure which alias to pass. `design_find` is the one exception: when `file` is
+omitted it searches across *all* connected files, and each match's `file` field reports which
+file (by alias) it came from.
 
 ## Project structure
 
