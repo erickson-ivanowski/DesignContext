@@ -89,7 +89,11 @@ export class ContextEngineImpl implements ContextEngine {
     };
 
     const optimized = optimize(content);
-    await this.cache.recordSavings(optimized.fullTokenCount, optimized.tokenCount);
+    // The real "without this tool" cost is the raw Figma tree an agent would otherwise
+    // have to pull node-by-node — not the already-summarized `content` above. Measure
+    // the full descendant subtree's raw/IR payload for the savings metric.
+    const rawTreeTokens = estimateTokens(descendants.map((n) => n.rawContext ?? n.irJson ?? n));
+    await this.cache.recordSavings(Math.max(rawTreeTokens, optimized.fullTokenCount), optimized.tokenCount);
     return {
       nodeId: root.id,
       level: 0,
@@ -104,7 +108,10 @@ export class ContextEngineImpl implements ContextEngine {
     const all = await this.graph.all(component.fileId);
     const assembled: ComponentContext = assembleComponent(component, all);
     const optimized = optimize(assembled);
-    await this.cache.recordSavings(optimized.fullTokenCount, optimized.tokenCount);
+    const nodeMap = new Map(all.map((n) => [n.id, n]));
+    const subtree = collectDescendants(component, nodeMap);
+    const rawTreeTokens = estimateTokens(subtree.map((n) => n.rawContext ?? n.irJson ?? n));
+    await this.cache.recordSavings(Math.max(rawTreeTokens, optimized.fullTokenCount), optimized.tokenCount);
     return {
       nodeId: component.id,
       level: 2,
@@ -189,7 +196,12 @@ export class ContextEngineImpl implements ContextEngine {
     }
 
     const optimized = optimize(content);
-    await this.cache.recordSavings(optimized.fullTokenCount, optimized.tokenCount);
+    // For levels 0-3, the raw/rawContext payload (level 4) is what the same node would
+    // have cost without progressive deepening — use it as the "without this tool"
+    // baseline instead of the level-specific `content`, which is already summarized.
+    const rawContent = node.rawContext ?? node.irJson ?? node;
+    const rawTokens = level < 4 ? estimateTokens(rawContent) : optimized.fullTokenCount;
+    await this.cache.recordSavings(Math.max(rawTokens, optimized.fullTokenCount), optimized.tokenCount);
     return {
       nodeId: node.id,
       level,
