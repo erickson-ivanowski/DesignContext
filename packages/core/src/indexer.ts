@@ -150,6 +150,7 @@ export class DesignIndexer {
 
       if (!needsFetch) {
         cached++;
+        await this.deps.cache.recordScanActivity(true);
         nodeMap[item.meta.nodeId] = prev!;
         continue;
       }
@@ -157,6 +158,7 @@ export class DesignIndexer {
       const raw = (await this.deps.adapter.getDesignContext(
         item.meta.nodeId,
       )) as Record<string, unknown>;
+      await this.deps.cache.recordScanActivity(false);
       const node = this.buildNode(item, raw);
       if (!prev) indexed++;
       else changed++;

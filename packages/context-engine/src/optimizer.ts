@@ -7,6 +7,8 @@ import {
 export interface OptimizedContext {
   content: unknown;
   tokenCount: number;
+  /** Token cost of `content` before any stripping — what an agent would have paid without this tool. */
+  fullTokenCount: number;
   truncated: boolean;
   references: string[];
 }
@@ -21,13 +23,14 @@ export function optimize(
   budget: TokenBudget = DEFAULT_BUDGET,
 ): OptimizedContext {
   const references: string[] = [];
+  const fullTokenCount = estimateTokens(content);
   let working = deepClone(content);
 
   const measure = () => estimateTokens(working);
   let tokenCount = measure();
 
   if (tokenCount <= budget.target) {
-    return { content: working, tokenCount, truncated: false, references };
+    return { content: working, tokenCount, fullTokenCount, truncated: false, references };
   }
 
   // 1) Drop raw context (always reference-able, level-4).
@@ -48,7 +51,7 @@ export function optimize(
     tokenCount = estimateTokens(working);
   }
 
-  return { content: working, tokenCount, truncated, references };
+  return { content: working, tokenCount, fullTokenCount, truncated, references };
 }
 
 function deepClone(value: unknown): unknown {

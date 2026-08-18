@@ -131,6 +131,19 @@ export interface FileStatusReport {
   cachedNodes: number;
 }
 
+export interface TokensSavedReport {
+  withoutContext: number;
+  withContext: number;
+  reductionPercent: number;
+  calls: number;
+}
+
+export interface FigmaCallsSavedReport {
+  cacheHits: number;
+  cacheMisses: number;
+  hitRatePercent: number;
+}
+
 export interface StatusReport {
   name: string;
   screens: number;
@@ -141,14 +154,8 @@ export interface StatusReport {
   cachedNodes: number;
   changedNodes: number;
   files: FileStatusReport[];
-}
-
-export interface Metrics {
-  cacheHits: number;
-  cacheMisses: number;
-  figmaCalls: number;
-  tokensWithoutContext: number;
-  tokensWithContext: number;
+  tokensSaved: TokensSavedReport;
+  figmaCallsSaved: FigmaCallsSavedReport;
 }
 
 export const CONTEXT_LEVELS: Record<ContextLevel, string> = {

@@ -3,7 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import type { DesignNode } from "@designcontext/core";
 import { graphKey } from "@designcontext/core";
-import type { DesignCache, Snapshot } from "./types";
+import type { DesignCache, SavingsTotals, Snapshot } from "./types";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS blobs (
@@ -23,6 +23,14 @@ CREATE TABLE IF NOT EXISTS snapshots (
 CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS savings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  tokens_without INTEGER NOT NULL DEFAULT 0,
+  tokens_with INTEGER NOT NULL DEFAULT 0,
+  calls INTEGER NOT NULL DEFAULT 0,
+  cache_hits INTEGER NOT NULL DEFAULT 0,
+  cache_misses INTEGER NOT NULL DEFAULT 0
 );
 `;
 
@@ -199,6 +207,44 @@ export class SqliteCacheStore implements DesignCache {
       kind: row.kind,
       data: JSON.parse(row.data) as Record<string, DesignNode>,
       createdAt: row.created_at,
+    };
+  }
+
+  async recordSavings(fullTokens: number, optimizedTokens: number): Promise<void> {
+    this.db
+      .prepare(
+        "INSERT INTO savings (id, tokens_without, tokens_with, calls) VALUES (1, ?, ?, 1) " +
+          "ON CONFLICT(id) DO UPDATE SET tokens_without = tokens_without + excluded.tokens_without, " +
+          "tokens_with = tokens_with + excluded.tokens_with, calls = calls + 1",
+      )
+      .run(fullTokens, optimizedTokens);
+  }
+
+  async recordScanActivity(hit: boolean): Promise<void> {
+    const column = hit ? "cache_hits" : "cache_misses";
+    this.db
+      .prepare(
+        `INSERT INTO savings (id, ${column}) VALUES (1, 1) ` +
+          `ON CONFLICT(id) DO UPDATE SET ${column} = ${column} + 1`,
+      )
+      .run();
+  }
+
+  async getSavings(): Promise<SavingsTotals> {
+    const row = this.db
+      .prepare("SELECT tokens_without, tokens_with, calls, cache_hits, cache_misses FROM savings WHERE id = 1")
+      .get() as
+      | { tokens_without: number; tokens_with: number; calls: number; cache_hits: number; cache_misses: number }
+      | undefined;
+    if (!row) {
+      return { tokensWithoutContext: 0, tokensWithContext: 0, calls: 0, cacheHits: 0, cacheMisses: 0 };
+    }
+    return {
+      tokensWithoutContext: row.tokens_without,
+      tokensWithContext: row.tokens_with,
+      calls: row.calls,
+      cacheHits: row.cache_hits,
+      cacheMisses: row.cache_misses,
     };
   }
 }

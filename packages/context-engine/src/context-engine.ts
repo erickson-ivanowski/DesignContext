@@ -89,6 +89,7 @@ export class ContextEngineImpl implements ContextEngine {
     };
 
     const optimized = optimize(content);
+    await this.cache.recordSavings(optimized.fullTokenCount, optimized.tokenCount);
     return {
       nodeId: root.id,
       level: 0,
@@ -103,6 +104,7 @@ export class ContextEngineImpl implements ContextEngine {
     const all = await this.graph.all(component.fileId);
     const assembled: ComponentContext = assembleComponent(component, all);
     const optimized = optimize(assembled);
+    await this.cache.recordSavings(optimized.fullTokenCount, optimized.tokenCount);
     return {
       nodeId: component.id,
       level: 2,
@@ -187,6 +189,7 @@ export class ContextEngineImpl implements ContextEngine {
     }
 
     const optimized = optimize(content);
+    await this.cache.recordSavings(optimized.fullTokenCount, optimized.tokenCount);
     return {
       nodeId: node.id,
       level,

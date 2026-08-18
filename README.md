@@ -147,6 +147,12 @@ designcontext status                  # see what got indexed, aggregate + per-fi
 
 The first scan of a file is a full scan; after that, `scan` only re-indexes what changed.
 
+`status` also reports a running, never-reset total of how much the local cache has actually
+saved: `tokensSaved` (full-content vs. optimized-summary token counts, and the reduction
+percentage, across every `design_get_*` call served) and `figmaCallsSaved` (cache hit rate
+during incremental scans — a hit means that node's data came from the local cache instead of
+a Figma API call).
+
 ### Register with your AI agent
 
 ```bash

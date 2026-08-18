@@ -3,7 +3,7 @@ import { buildFixture } from "../helpers/fixture";
 
 describe("US2: detect a small design change without reprocessing everything", () => {
   it("incremental scan reports exactly the changed node and skips re-fetch", async () => {
-    const { adapter, indexer } = buildFixture();
+    const { adapter, cache, indexer } = buildFixture();
 
     await indexer.fullScan("0:1");
 
@@ -38,5 +38,10 @@ describe("US2: detect a small design change without reprocessing everything", ()
 
     // Only the mutated button's context is re-fetched.
     expect(adapter.calls.context).toEqual(["0:3"]);
+
+    // 2 unchanged nodes (0:1, 0:2) recorded as cache hits, 1 changed node (0:3) as a miss.
+    const savings = await cache.getSavings();
+    expect(savings.cacheHits).toBe(2);
+    expect(savings.cacheMisses).toBe(1);
   });
 });

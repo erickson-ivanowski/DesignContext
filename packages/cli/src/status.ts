@@ -32,6 +32,11 @@ async function buildFileStatus(
   };
 }
 
+function pct(numerator: number, denominator: number): number {
+  if (denominator <= 0) return 0;
+  return Math.round((numerator / denominator) * 100);
+}
+
 /** Compute the aggregate project status report, plus a per-file breakdown. */
 export async function buildStatus(ctx: AppContext): Promise<StatusReport> {
   const config = loadProjectConfig(ctx.projectRoot);
@@ -46,6 +51,8 @@ export async function buildStatus(ctx: AppContext): Promise<StatusReport> {
     0,
   );
 
+  const savings = await ctx.cache.getSavings();
+
   return {
     name: config.name,
     screens: files.reduce((sum, f) => sum + f.screens, 0),
@@ -59,6 +66,20 @@ export async function buildStatus(ctx: AppContext): Promise<StatusReport> {
     cachedNodes: allNodes.length,
     changedNodes: 0,
     files,
+    tokensSaved: {
+      withoutContext: savings.tokensWithoutContext,
+      withContext: savings.tokensWithContext,
+      reductionPercent: pct(
+        savings.tokensWithoutContext - savings.tokensWithContext,
+        savings.tokensWithoutContext,
+      ),
+      calls: savings.calls,
+    },
+    figmaCallsSaved: {
+      cacheHits: savings.cacheHits,
+      cacheMisses: savings.cacheMisses,
+      hitRatePercent: pct(savings.cacheHits, savings.cacheHits + savings.cacheMisses),
+    },
   };
 }
 

@@ -14,6 +14,15 @@ function buildCtx(connectionState: FileConnectionState): ToolContext {
     upsertNode: async () => {},
     saveSnapshot: async () => {},
     getLatestSnapshot: async () => null,
+    recordSavings: async () => {},
+    recordScanActivity: async () => {},
+    getSavings: async () => ({
+      tokensWithoutContext: 0,
+      tokensWithContext: 0,
+      calls: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+    }),
   });
   return {
     engine: engine as ToolContext["engine"],

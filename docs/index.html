@@ -438,6 +438,29 @@
           Aquí DesignContext abre el Figma MCP, lee el diseño y guarda la versión organizada
           localmente. La primera vez hace un escaneo completo; después, solo detecta lo que cambió.
         </p>
+
+        <p data-i18n="pt">
+          <code>status</code> também mostra um total acumulado (nunca zerado) de quanto o cache
+          local já economizou de verdade: <code>tokensSaved</code> (tokens do conteúdo completo vs.
+          o resumo otimizado, e o percentual de redução, somando toda chamada <code>design_get_*</code>)
+          e <code>figmaCallsSaved</code> (taxa de acerto do cache nos scans incrementais — um "hit"
+          significa que os dados daquele nó vieram do cache local, sem bater no Figma).
+        </p>
+        <p data-i18n="en">
+          <code>status</code> also reports a running, never-reset total of how much the local cache
+          has actually saved: <code>tokensSaved</code> (full-content vs. optimized-summary token
+          counts, and the reduction percentage, across every <code>design_get_*</code> call served)
+          and <code>figmaCallsSaved</code> (cache hit rate during incremental scans — a hit means
+          that node's data came from the local cache instead of a Figma API call).
+        </p>
+        <p data-i18n="es">
+          <code>status</code> también muestra un total acumulado (nunca se reinicia) de cuánto ha
+          ahorrado realmente el cache local: <code>tokensSaved</code> (tokens del contenido completo
+          vs. el resumen optimizado, y el porcentaje de reducción, sumando cada llamada
+          <code>design_get_*</code>) y <code>figmaCallsSaved</code> (tasa de aciertos del cache en
+          los scans incrementales — un acierto significa que los datos de ese nodo vinieron del
+          cache local, sin llamar a Figma).
+        </p>
       </div>
     </div>
 
