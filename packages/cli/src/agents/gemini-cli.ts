@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AgentTarget } from "./types";
 import { readJson, writeJson, mergeMcpServer } from "./json-helpers";
+import { resolveMcpInvocation } from "./invocation";
 
 export const geminiCli: AgentTarget = {
   id: "gemini-cli",
@@ -11,10 +12,7 @@ export const geminiCli: AgentTarget = {
   },
   async install(configPath) {
     const data = readJson(configPath);
-    const merged = mergeMcpServer(data, "mcpServers", "design-context", {
-      command: "designcontext",
-      args: ["mcp"],
-    });
+    const merged = mergeMcpServer(data, "mcpServers", "design-context", { ...resolveMcpInvocation() });
     writeJson(configPath, merged);
   },
 };

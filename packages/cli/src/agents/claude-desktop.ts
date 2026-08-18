@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AgentTarget } from "./types";
 import { readJson, writeJson, mergeMcpServer } from "./json-helpers";
+import { resolveMcpInvocation } from "./invocation";
 
 function configDir(): string {
   if (process.platform === "win32") {
@@ -21,10 +22,7 @@ export const claudeDesktop: AgentTarget = {
   },
   async install(configPath) {
     const data = readJson(configPath);
-    const merged = mergeMcpServer(data, "mcpServers", "design-context", {
-      command: "designcontext",
-      args: ["mcp"],
-    });
+    const merged = mergeMcpServer(data, "mcpServers", "design-context", { ...resolveMcpInvocation() });
     writeJson(configPath, merged);
   },
 };

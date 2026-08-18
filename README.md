@@ -158,6 +158,11 @@ Desktop, Claude Code, Gemini CLI, OpenAI Codex, and opencode** — pick one inte
 the prompt with `--agent claude-code,gemini-cli`. See [Agent integration](#agent-integration) to
 configure it by hand instead.
 
+If `designcontext` wasn't installed globally (e.g. `npm install` without `-g`, or a restricted
+environment where global installs aren't allowed), `setup` detects that and writes `npx -y
+designcontext mcp` into the agent config instead of a bare `designcontext` command — so the agent
+can still start it without you fixing your `PATH` first.
+
 ## CLI
 
 | Command | Description |

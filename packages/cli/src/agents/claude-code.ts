@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AgentTarget } from "./types";
 import { readJson, writeJson } from "./json-helpers";
+import { resolveMcpInvocation } from "./invocation";
 
 /** User-level `~/.claude.json`. Respects CLAUDE_CONFIG_DIR like Claude Code itself. */
 function configPath(): string {
@@ -16,6 +17,7 @@ export const claudeCode: AgentTarget = {
     return [configPath()];
   },
   async install(target) {
+    const { command, args } = resolveMcpInvocation();
     const data = readJson(target);
     const servers =
       data.mcpServers && typeof data.mcpServers === "object"
@@ -27,8 +29,8 @@ export const claudeCode: AgentTarget = {
         ...servers,
         "design-context": {
           type: "stdio",
-          command: "designcontext",
-          args: ["mcp"],
+          command,
+          args,
         },
       },
     };
