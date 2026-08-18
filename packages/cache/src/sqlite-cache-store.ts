@@ -1,4 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import path from "node:path";
 import fs from "node:fs";
 import type { DesignNode } from "@designcontext/core";
@@ -23,6 +23,10 @@ CREATE TABLE IF NOT EXISTS snapshots (
 
 /** Open (creating if needed) the SQLite database backing a SqliteCacheStore. */
 export async function openDb(dbFilePath: string): Promise<DatabaseSync> {
+  // Dynamic import: `node:sqlite` emits an ExperimentalWarning at load time.
+  // Loading it lazily (only when a caller actually opens a DB) lets the CLI's
+  // entrypoint respawn with --disable-warning before this ever executes.
+  const { DatabaseSync } = await import("node:sqlite");
   fs.mkdirSync(path.dirname(dbFilePath), { recursive: true });
   const db = new DatabaseSync(dbFilePath);
   db.exec(SCHEMA);
