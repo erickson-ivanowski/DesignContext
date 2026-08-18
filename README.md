@@ -7,10 +7,15 @@
 </p>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/designcontext"><img src="https://img.shields.io/npm/v/designcontext" alt="npm version" /></a>
   <a href="#"><img src="https://img.shields.io/badge/node-%3E%3D22.5-brightgreen" alt="Node.js >= 22.5" /></a>
   <a href="#"><img src="https://img.shields.io/badge/typescript-5.x-blue" alt="TypeScript" /></a>
   <a href="#"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License MIT" /></a>
   <a href="#"><img src="https://img.shields.io/badge/status-MVP-orange" alt="Status MVP" /></a>
+</p>
+
+<p align="center">
+  <a href="https://erickson-ivanowski.github.io/DesignContext/">📖 Full documentation</a>
 </p>
 
 ---
@@ -22,6 +27,9 @@ DesignContext indexes a user-selected scope, persists a normalized semantic repr
 locally, and serves agents exactly what they need.
 
 Primary metric: **≥ 70% token reduction** vs. raw design context.
+
+> **Design source:** only **Figma** is supported today (via the Figma MCP). Support for other
+> design tools is not implemented yet.
 
 ## Features
 
@@ -49,7 +57,7 @@ AI agent ◀──(MCP over stdio)── design-context server ◀── Context
 ## Requirements
 
 - **Node.js ≥ 22.5** (uses the built-in `node:sqlite`)
-- A Figma connection — one of:
+- A **Figma** connection — one of:
   - an **already-configured Figma MCP** (auto-detected from `.mcp.json` / `~/.claude.json`), or
   - a **hosted Figma MCP URL**, or
   - a **Figma Personal Access Token** (fallback)
@@ -59,28 +67,62 @@ AI agent ◀──(MCP over stdio)── design-context server ◀── Context
 
 ```bash
 npm install -g designcontext
-# or from a tarball:
-npm install -g ./designcontext-0.1.0.tgz
+```
+
+Confirm it worked:
+
+```bash
+designcontext --version
 ```
 
 ## Quick start
 
 ```bash
+cd your-project
 designcontext init
-designcontext connect                                 # auto-reuses an existing Figma MCP (no token)
-# or:
-designcontext connect --url https://host/mcp          # hosted Figma MCP
-designcontext connect --file <fileId> --token <key>   # fallback: spawn figma-developer-mcp
-
-designcontext scan                                   # index the document root
-designcontext scan --node 123:456                    # index a specific frame/component
-designcontext status
-designcontext mcp                                    # MCP server for agents
 ```
 
-`connect` prefers an existing Figma MCP (discovered from `.mcp.json` or `~/.claude.json`), so
-the designer doesn't need to create a token. A `--url`, `--token`, or `--file` can be given to
-override. `scan` indexes the requested scope (defaults to `0:0` when no `--node` is given).
+This creates a `.designcontext/` folder with the project's configuration.
+
+### Connect to Figma
+
+```bash
+designcontext connect
+```
+
+`connect` prefers an **existing Figma MCP** — it auto-detects one already configured in your
+agent (from `.mcp.json` or `~/.claude.json`) and reuses it, so in most cases no token is needed.
+
+If you don't have one configured, or want to point somewhere specific:
+
+```bash
+designcontext connect --url https://host/mcp          # a hosted Figma MCP
+designcontext connect --file <fileId> --token <key>   # fallback: spawn figma-developer-mcp with a token
+```
+
+Figma credentials are stored in the OS secure vault (Keychain on macOS, Credential Manager on
+Windows) — never in project files.
+
+### Index a screen
+
+```bash
+designcontext scan                    # index the document root
+designcontext scan --node 123:456     # index a specific frame/component
+designcontext status                  # see what got indexed
+```
+
+The first scan is a full scan; after that, `scan` only re-indexes what changed.
+
+### Register with your AI agent
+
+```bash
+designcontext setup
+```
+
+Registers the DesignContext MCP server with your agent's config in one step. Supports **Claude
+Desktop, Claude Code, Gemini CLI, OpenAI Codex, and opencode** — pick one interactively, or skip
+the prompt with `--agent claude-code,gemini-cli`. See [Agent integration](#agent-integration) to
+configure it by hand instead.
 
 ## CLI
 
@@ -93,9 +135,12 @@ override. `scan` indexes the requested scope (defaults to `0:0` when no `--node`
 | `designcontext diff [screen]` | Show only what changed since the last scan. |
 | `designcontext inspect --node <id> [--level 0-4]` | Print a node's context at a level. |
 | `designcontext clear-cache` | Clear the local cache (keeps project config). |
-| `designcontext mcp` | Start the MCP server for agents over stdio. |
+| `designcontext setup` | Register the MCP server with an agent (`--agent <ids>` to skip the prompt). |
 
 ## Agent integration
+
+DesignContext runs as an **MCP server** over stdio. `designcontext setup` does this for you (see
+above); to configure it by hand, add this to your agent's MCP config:
 
 ```json
 {
@@ -107,6 +152,10 @@ override. `scan` indexes the requested scope (defaults to `0:0` when no `--node`
   }
 }
 ```
+
+This gives the agent tools to query the design directly: `design_get_screen`,
+`design_get_structure`, `design_get_component`, `design_get_tokens`, `design_get_changes`,
+`design_find`, `design_inspect`.
 
 ## Project structure
 
@@ -123,10 +172,11 @@ packages/
 ├── diff-engine/      content/structural diff
 ├── context-engine/   Context Optimizer, component/token/changes assembly
 ├── mcp-server/       MCP server (design_get_* / design_find / design_inspect)
-└── cli/              Commander CLI (init, connect, scan, status, diff, inspect, clear-cache, mcp)
+└── cli/              Commander CLI (init, connect, scan, status, diff, inspect, clear-cache, setup, mcp)
 ```
 
-Full end-user documentation: [`docs/index.html`](docs/index.html).
+Full end-user documentation: **[erickson-ivanowski.github.io/DesignContext](https://erickson-ivanowski.github.io/DesignContext/)**
+(also available in this repo at [`docs/index.html`](docs/index.html), in Portuguese, English, and Spanish).
 
 ## Development
 
@@ -148,16 +198,6 @@ npm run build       # esbuild bundle -> dist/cli.mjs
 Tests are hermetic: a `MockFigmaAdapter` and a mock Figma MCP server spawned over stdio
 (`tests/fixtures/mock-figma-server.mjs`) replace the live Figma MCP, and an in-memory
 cache replaces SQLite.
-
-## Packaging
-
-```bash
-npm run build    # bundle -> dist/cli.mjs
-npm pack         # -> designcontext-<version>.tgz
-```
-
-The published package ships only `dist/cli.mjs` plus runtime deps; `keytar` is an
-optional dependency (falls back to a non-versioned credential file under `~/.designcontext/`).
 
 ## Storage & security
 

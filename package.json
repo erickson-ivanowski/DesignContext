@@ -8,6 +8,8 @@
     "type": "git",
     "url": "https://github.com/erickson-ivanowski/DesignContext.git"
   },
+  "homepage": "https://erickson-ivanowski.github.io/DesignContext/",
+  "bugs": "https://github.com/erickson-ivanowski/DesignContext/issues",
   "bin": {
     "designcontext": "dist/cli.mjs"
   },

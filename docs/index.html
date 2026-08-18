@@ -141,7 +141,7 @@
 <body>
 
 <header class="hero">
-  <div class="logo"><span class="dot"></span> designcontext</div>
+  <a class="logo" href="https://github.com/erickson-ivanowski/DesignContext" style="color: var(--muted)"><span class="dot"></span> designcontext</a>
   <h1 data-i18n="pt">Do design ao código, <span>sem bagunça</span></h1>
   <h1 data-i18n="en">From design to code, <span>without the mess</span></h1>
   <h1 data-i18n="es">Del diseño al código, <span>sin desorden</span></h1>
@@ -255,6 +255,15 @@
       <span data-i18n="en">Everything is saved on your machine, in <code>~/.designcontext/</code>. Nothing is sent to external servers — the only communication is with Figma.</span>
       <span data-i18n="es">Todo se guarda en tu máquina, en <code>~/.designcontext/</code>. Nada se envía a servidores externos — solo hay comunicación con Figma.</span>
     </div>
+
+    <div class="callout">
+      <b data-i18n="pt">Só Figma, por enquanto</b>
+      <b data-i18n="en">Figma only, for now</b>
+      <b data-i18n="es">Solo Figma, por ahora</b>
+      <span data-i18n="pt">Hoje o DesignContext funciona apenas com o <strong>Figma</strong>. Suporte a outras ferramentas de design ainda não existe.</span>
+      <span data-i18n="en">Today DesignContext only works with <strong>Figma</strong>. Support for other design tools doesn't exist yet.</span>
+      <span data-i18n="es">Hoy DesignContext solo funciona con <strong>Figma</strong>. El soporte para otras herramientas de diseño todavía no existe.</span>
+    </div>
   </section>
 
   <section id="requisitos">
@@ -309,15 +318,10 @@
       <span data-i18n="es">Instalación</span>
     </h2>
 
-    <p data-i18n="pt">Instale de forma global (uma única vez):</p>
-    <p data-i18n="en">Install globally (once):</p>
-    <p data-i18n="es">Instala de forma global (una sola vez):</p>
+    <p data-i18n="pt">Instale de forma global (uma única vez), via npm:</p>
+    <p data-i18n="en">Install globally (once), via npm:</p>
+    <p data-i18n="es">Instala de forma global (una sola vez), vía npm:</p>
     <pre><code><span class="prompt">$</span> npm install -g designcontext</code></pre>
-
-    <p data-i18n="pt">Ou, se você recebeu um arquivo <code>.tgz</code> do time:</p>
-    <p data-i18n="en">Or, if you received a <code>.tgz</code> file from the team:</p>
-    <p data-i18n="es">O, si recibiste un archivo <code>.tgz</code> del equipo:</p>
-    <pre><code><span class="prompt">$</span> npm install -g ./designcontext-0.1.0.tgz</code></pre>
 
     <p data-i18n="pt">Confirme que funcionou:</p>
     <p data-i18n="en">Confirm it worked:</p>
@@ -342,7 +346,7 @@
         <p data-i18n="pt">Dentro da pasta do seu projeto, rode:</p>
         <p data-i18n="en">Inside your project folder, run:</p>
         <p data-i18n="es">Dentro de la carpeta de tu proyecto, ejecuta:</p>
-        <pre><code><span class="prompt">$</span> cd minha-pasta
+        <pre><code><span class="prompt">$</span> cd your-project
 <span class="prompt">$</span> designcontext init</code></pre>
 
         <p data-i18n="pt">Isso cria uma pasta <code>.designcontext/</code> com a configuração do projeto.</p>
@@ -410,13 +414,30 @@
     <div class="step">
       <div class="n">4</div>
       <div class="body">
-        <h3 style="margin-top:0" data-i18n="pt">Pronto — o agente já consegue usar</h3>
-        <h3 style="margin-top:0" data-i18n="en">Done — your agent can already use it</h3>
-        <h3 style="margin-top:0" data-i18n="es">Listo — el agente ya puede usarlo</h3>
+        <h3 style="margin-top:0" data-i18n="pt">Registre no seu agente de IA</h3>
+        <h3 style="margin-top:0" data-i18n="en">Register with your AI agent</h3>
+        <h3 style="margin-top:0" data-i18n="es">Regístralo en tu agente de IA</h3>
 
-        <p data-i18n="pt">Com o servidor MCP no ar, a IA passa a consultar o design sozinha. Veja a <a href="#agente">seção de integração</a>.</p>
-        <p data-i18n="en">With the MCP server running, the AI can query the design on its own. See the <a href="#agente">integration section</a>.</p>
-        <p data-i18n="es">Con el servidor MCP activo, la IA consulta el diseño por su cuenta. Mira la <a href="#agente">sección de integración</a>.</p>
+        <p data-i18n="pt">Um comando registra o DesignContext no agente que você usa:</p>
+        <p data-i18n="en">One command registers DesignContext with the agent you use:</p>
+        <p data-i18n="es">Un comando registra DesignContext en el agente que usas:</p>
+        <pre><code><span class="prompt">$</span> designcontext setup</code></pre>
+
+        <p data-i18n="pt">
+          Escolha na lista — funciona com <strong>Claude Desktop, Claude Code, Gemini CLI, OpenAI Codex</strong> e
+          <strong>opencode</strong>. Prefere pular a pergunta? <code>designcontext setup --agent claude-code,gemini-cli</code>.
+          Depois disso, a IA já consegue consultar o design sozinha — veja a <a href="#agente">seção de integração</a>.
+        </p>
+        <p data-i18n="en">
+          Pick from the list — works with <strong>Claude Desktop, Claude Code, Gemini CLI, OpenAI Codex</strong>, and
+          <strong>opencode</strong>. Want to skip the prompt? <code>designcontext setup --agent claude-code,gemini-cli</code>.
+          After that, the AI can query the design on its own — see the <a href="#agente">integration section</a>.
+        </p>
+        <p data-i18n="es">
+          Elige de la lista — funciona con <strong>Claude Desktop, Claude Code, Gemini CLI, OpenAI Codex</strong> y
+          <strong>opencode</strong>. ¿Prefieres saltar la pregunta? <code>designcontext setup --agent claude-code,gemini-cli</code>.
+          Después de eso, la IA ya puede consultar el diseño por su cuenta — mira la <a href="#agente">sección de integración</a>.
+        </p>
       </div>
     </div>
   </section>
@@ -438,7 +459,7 @@
         <tr><td><code>diff [tela]</code></td><td>Mostra só o que mudou desde o último scan.</td></tr>
         <tr><td><code>inspect</code></td><td>Imprime o contexto de um nó em um nível (0 = resumo … 4 = bruto).</td></tr>
         <tr><td><code>clear-cache</code></td><td>Limpa o cache local (mantém a configuração do projeto).</td></tr>
-        <tr><td><code>mcp</code></td><td>Inicia o servidor MCP para o agente de IA.</td></tr>
+        <tr><td><code>setup</code></td><td>Registra o servidor MCP no seu agente de IA. Aceita <code>--agent &lt;ids&gt;</code> pra pular a pergunta.</td></tr>
       </tbody>
     </table>
     <table data-i18n="en">
@@ -451,7 +472,7 @@
         <tr><td><code>diff [screen]</code></td><td>Shows only what changed since the last scan.</td></tr>
         <tr><td><code>inspect</code></td><td>Prints a node's context at a level (0 = summary … 4 = raw).</td></tr>
         <tr><td><code>clear-cache</code></td><td>Clears the local cache (keeps the project configuration).</td></tr>
-        <tr><td><code>mcp</code></td><td>Starts the MCP server for the AI agent.</td></tr>
+        <tr><td><code>setup</code></td><td>Registers the MCP server with your AI agent. Accepts <code>--agent &lt;ids&gt;</code> to skip the prompt.</td></tr>
       </tbody>
     </table>
     <table data-i18n="es">
@@ -464,7 +485,7 @@
         <tr><td><code>diff [pantalla]</code></td><td>Muestra solo lo que cambió desde el último scan.</td></tr>
         <tr><td><code>inspect</code></td><td>Imprime el contexto de un nodo en un nivel (0 = resumen … 4 = bruto).</td></tr>
         <tr><td><code>clear-cache</code></td><td>Limpia el cache local (mantiene la configuración del proyecto).</td></tr>
-        <tr><td><code>mcp</code></td><td>Inicia el servidor MCP para el agente de IA.</td></tr>
+        <tr><td><code>setup</code></td><td>Registra el servidor MCP en tu agente de IA. Acepta <code>--agent &lt;ids&gt;</code> para saltar la pregunta.</td></tr>
       </tbody>
     </table>
 
@@ -482,16 +503,19 @@
     </h2>
 
     <p data-i18n="pt">
-      O DesignContext funciona como um <strong>servidor MCP</strong>. Basta registrar o comando
-      abaixo na configuração do seu agente (Claude, Codex, etc.):
+      O DesignContext funciona como um <strong>servidor MCP</strong>. O jeito mais fácil de
+      registrar é rodar <code>designcontext setup</code> (veja o <a href="#primeiros-passos">passo 4</a>).
+      Se preferir configurar na mão, adicione isto ao arquivo de configuração MCP do seu agente:
     </p>
     <p data-i18n="en">
-      DesignContext works as an <strong>MCP server</strong>. Just register the command
-      below in your agent's configuration (Claude, Codex, etc.):
+      DesignContext works as an <strong>MCP server</strong>. The easiest way to register it is
+      running <code>designcontext setup</code> (see <a href="#primeiros-passos">step 4</a>).
+      To configure it by hand instead, add this to your agent's MCP config file:
     </p>
     <p data-i18n="es">
-      DesignContext funciona como un <strong>servidor MCP</strong>. Solo hay que registrar el comando
-      de abajo en la configuración de tu agente (Claude, Codex, etc.):
+      DesignContext funciona como un <strong>servidor MCP</strong>. La forma más fácil de
+      registrarlo es ejecutar <code>designcontext setup</code> (mira el <a href="#primeiros-passos">paso 4</a>).
+      Si prefieres configurarlo a mano, agrega esto al archivo de configuración MCP de tu agente:
     </p>
 
     <pre><code>{
@@ -640,9 +664,9 @@
 </main>
 
 <footer>
-  <span data-i18n="pt">DesignContext &middot; documentação do usuário final &middot; versão 0.1.0</span>
-  <span data-i18n="en">DesignContext &middot; end-user documentation &middot; version 0.1.0</span>
-  <span data-i18n="es">DesignContext &middot; documentación del usuario final &middot; versión 0.1.0</span>
+  <span data-i18n="pt">DesignContext &middot; documentação do usuário final &middot; <a href="https://github.com/erickson-ivanowski/DesignContext">GitHub</a> &middot; <a href="https://www.npmjs.com/package/designcontext">npm</a></span>
+  <span data-i18n="en">DesignContext &middot; end-user documentation &middot; <a href="https://github.com/erickson-ivanowski/DesignContext">GitHub</a> &middot; <a href="https://www.npmjs.com/package/designcontext">npm</a></span>
+  <span data-i18n="es">DesignContext &middot; documentación del usuario final &middot; <a href="https://github.com/erickson-ivanowski/DesignContext">GitHub</a> &middot; <a href="https://www.npmjs.com/package/designcontext">npm</a></span>
 </footer>
 
 <script>
