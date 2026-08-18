@@ -8,4 +8,5 @@ export * from "./diff";
 export * from "./inspect";
 export * from "./clear-cache";
 export * from "./agent-config";
+export * from "./agents/invocation";
 export * from "./cli";
